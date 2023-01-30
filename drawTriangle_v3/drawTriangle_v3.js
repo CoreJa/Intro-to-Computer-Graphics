@@ -16,7 +16,7 @@ out vec4 out_colors;
 void main(){
     //gl_position is a special var in vertext shader
     gl_Position = vec4(a_position.x*rotation.y + a_position.y*rotation.x,
-                       a_position.y*rotation.x - a_position.x*rotation.y,
+                       a_position.y*rotation.y - a_position.x*rotation.x,
                        1,1);
     //send data to frag shader
     out_colors=a_colors;
