@@ -9,14 +9,15 @@ in vec4 a_position;
 // the colors inputs from JS
 in vec4 a_colors;
 //rotation delta, [sina,cosa]
-uniform vec2 rotation;
+uniform float rotation;
 // the data send from vertexshader to fragshader
 out vec4 out_colors;
 
 void main(){
     //gl_position is a special var in vertext shader
-    gl_Position = vec4(a_position.x*rotation.y + a_position.y*rotation.x,
-                       a_position.y*rotation.y - a_position.x*rotation.x,
+    float a=radians(rotation);
+    gl_Position = vec4(a_position.x*cos(a) + a_position.y*sin(a),
+                       a_position.y*cos(a) - a_position.x*sin(a),
                        1,1);
     //send data to frag shader
     out_colors=a_colors;
@@ -187,7 +188,7 @@ function draw(gl,program,buffer,rotation) {
   //find the uniform variable
   let rotationAttributeLocation=gl.getUniformLocation(program,'rotation');
   //send in the data of rotation
-  gl.uniform2fv(rotationAttributeLocation, transform(rotation));
+  gl.uniform1f(rotationAttributeLocation, rotation);
 
   // clear canvas
   gl.clear(gl.COLOR_BUFFER_BIT);
