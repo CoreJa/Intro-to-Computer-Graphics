@@ -91,7 +91,7 @@ function initWebGL(){
   let fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc);
   let program = createProgram(gl, vertexShader, fragmentShader);
 
-  buffers=initBuffers(gl);
+  buffer=initBuffers(gl);
   
   let then=0;
   let rotation=0;
@@ -117,59 +117,49 @@ function initWebGL(){
     } else if (rotation<-360){
       rotation+=360
     }
-    draw(gl,program,buffers,rotation);
-    console.log(rotation);
+    draw(gl,program,buffer,rotation);
+    // console.log(rotation);
     requestAnimationFrame(render);
   }
   requestAnimationFrame(render);
-  // draw(gl,program,buffers,rotation);
+  // draw(gl,program,buffer,rotation);
 }
 
 function initBuffers(gl) {
     // create memory buffer for vertex shader and copy/transfer vertices to GPU
-    let positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    let buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     // create triangle attributes (vertices position)
     // and populate GPU buffer
     //vertices position(2D), loading more data at once so we can easily draw another triangle.
-    triangleVertices = [
-       -0.7, -0.7, //vertex 1
-       0.7, 0.7, //vertex 2
-       0.7, -0.7, //vertex 3
-       -0.7, -0.7, //vertex 4
-       0.7, 0.7, //vertex 5
-       -0.7, 0.7, //vertex 6
-     ];
-    // send vertices position data to GPU
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleVertices), gl.STATIC_DRAW);
-
-    //create and bind color VBO
-    let colorBuffer=gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-    //color data
-    colors=[
+    data=[
+      -0.7, -0.7, //vertex 1
       1,0,1,1, //red+blue for v1
+      0.7, 0.7, //vertex 2
       1,0,1,1, //red+blue for v2
+      0.7, -0.7, //vertex 3
       1,0,0,1, //red for v3
+      -0.7, -0.7, //vertex 4
       0,1,1,1, //green+blue for v4
+      0.7, 0.7, //vertex 5
       0,1,1,1, //blue for v5
+      -0.7, 0.7, //vertex 6
       0,0,1,1, //blue for v6
     ]
-    //send data to color VBO
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-
-    return [positionBuffer,colorBuffer];
+    // send data to GPU
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+    return buffer;
 }
 
 function transform(rotation){
   return [Math.sin(rotation*Math.PI/180),Math.cos(rotation*Math.PI/180)]
 }
 
-function draw(gl,program,buffers,rotation) {
+function draw(gl,program,buffer,rotation) {
   // tell the GPU which program to use 
   gl.useProgram(program);
   //Bind positionBuffer again
-  gl.bindBuffer(gl.ARRAY_BUFFER,buffers[0])
+  gl.bindBuffer(gl.ARRAY_BUFFER,buffer)
   // attribute location in vertexShader
   let positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
   // Now we tell vertex shader how to extract/pull/interpret bytes in buffer
@@ -181,26 +171,26 @@ function draw(gl,program,buffers,rotation) {
   let size = 2; // get/read 2 components per iteration
   let type = gl.FLOAT; // size in bits for each item
   let normalize = false;  // do not normalize data, generally Never
-  let stride = 0; // used to skip over bytes when different attributes are stored in buffer (ie position, color)
+  let stride = 24; // used to skip over bytes when different attributes are stored in buffer (ie position, color)
   let offset = 0;  // location to start reading data from in the buffer
   gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
 
   //Bind colorBuffer again
-  gl.bindBuffer(gl.ARRAY_BUFFER,buffers[1])
+  gl.bindBuffer(gl.ARRAY_BUFFER,buffer)
   //get location of color attr
   let colorAttributeLocation=gl.getAttribLocation(program,'a_colors')
-
   //enable vertex attr array
   gl.enableVertexAttribArray(colorAttributeLocation);
   //specify how to read color VBO
-  gl.vertexAttribPointer(colorAttributeLocation,4,gl.FLOAT,false,0,0);
+  gl.vertexAttribPointer(colorAttributeLocation,4,gl.FLOAT,false,24,8);
 
+  //find the uniform variable
   let rotationAttributeLocation=gl.getUniformLocation(program,'rotation');
+  //send in the data of rotation
   gl.uniform2fv(rotationAttributeLocation, transform(rotation));
 
   // clear canvas
   gl.clear(gl.COLOR_BUFFER_BIT);
-
   // issue draw function. GPU will start executing pipeline
   //  pulling data from buffer and we populated ...  
   let primitiveType = gl.TRIANGLES;
