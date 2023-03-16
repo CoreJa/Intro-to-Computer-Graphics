@@ -92,11 +92,11 @@ function initWebGL(){
   gl.clearColor(0.9,0.9,0.9,1);
   buffer=initBuffers(gl);
   let rotation=0;
-  draw(gl,program,buffer,rotation);
+  draw(gl,program,rotation);
   const range=document.querySelector("#range");
   range.addEventListener("input",()=>{
     rotation=range.value;
-    draw(gl,program,buffer,rotation);
+    draw(gl,program,rotation);
     // console.log(range.value);
   })
 }
@@ -127,11 +127,9 @@ function initBuffers(gl) {
     return buffer;
 }
 
-function draw(gl,program,buffer,rotation) {
+function draw(gl,program,rotation) {
   // tell the GPU which program to use 
   gl.useProgram(program);
-  //Bind positionBuffer again
-  gl.bindBuffer(gl.ARRAY_BUFFER,buffer)
   // attribute location in vertexShader
   let positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
   // Now we tell vertex shader how to extract/pull/interpret bytes in buffer
@@ -147,8 +145,6 @@ function draw(gl,program,buffer,rotation) {
   let offset = 0;  // location to start reading data from in the buffer
   gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
 
-  //Bind colorBuffer again
-  gl.bindBuffer(gl.ARRAY_BUFFER,buffer)
   //get location of color attr
   let colorAttributeLocation=gl.getAttribLocation(program,'a_colors')
   //enable vertex attr array
