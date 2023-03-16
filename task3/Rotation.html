@@ -4,18 +4,13 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clear Canvas Example</title>
+    <title>Simple Geometry Orientation Rotation</title>
 </head>
-<body onload="initWebGL()">
-    <ul>
-        <li>Create HTML Document</li>
-        <li>Create canvas tag</li>
-        <li>Create JS file</li>
-
-    </ul>
+<body>
+    <h1>Simple Geometry Orientation Rotation</h1>
     <!-- made a little adjustment to the size of canvas so it's indeed a square. -->
     <canvas id="c" width="640" height="640"></canvas>
-    <p><button id="direction">direction</button></p>
-    <script src="./drawTriangle_v3.js" ></script>
+    <p>Rotation: <input id="range" type="range" max="180" min="-180" step="0.1" value="0"></p>
+    <script src="./Rotation.js" ></script>
 </body>
 </html>

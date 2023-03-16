@@ -4,13 +4,18 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Geometry Orientation Scale</title>
+    <title>Clear Canvas Example</title>
 </head>
-<body>
-    <h1>Simple Geometry Orientation Scale</h1>
+<body onload="initWebGL()">
+    <ul>
+        <li>Create HTML Document</li>
+        <li>Create canvas tag</li>
+        <li>Create JS file</li>
+
+    </ul>
     <!-- made a little adjustment to the size of canvas so it's indeed a square. -->
     <canvas id="c" width="640" height="640"></canvas>
-    <p>Scale: <input id="range" type="range" max="2.0" min="0.1" step="0.1" value="1"></p>
-    <script src="./drawTriangle_v4_Scale.js" ></script>
+    <p><button id="direction">direction</button></p>
+    <script src="./task2.js" ></script>
 </body>
 </html>
