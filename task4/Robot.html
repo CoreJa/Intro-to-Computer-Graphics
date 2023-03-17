@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="gl-matrix-min.js" defer></script>
+    <script src="./Robot.js" defer></script>
+    <title>Robot</title>
+    <style>
+        body{
+            max-width: 1200px;
+            margin:0 auto;
+            padding: 20px;
+        }
+        canvas{
+            margin: 0 auto;
+        }
+        .flex-line{
+            display: flex;
+            align-content: space-between;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .container{
+            display: flex;
+            justify-content: space-between;
+        }
+        fieldset {
+            display: inline;
+        }
+        fieldset > fieldset {
+            display: block;
+        }
+        .text{
+            width: 36px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <h1>Robot</h1>
+    <!-- made a little adjustment to the size of canvas so it's indeed a square. -->
+    <canvas style="display: block;" id="c" width="640" height="480"></canvas>
+    <div class="container">
+        <fieldset>
+            <legend>Torse</legend>
+            <fieldset>
+                <legend>Rotation</legend>
+                <div class="flex-line">X: <input id="torseRotationX" type="range" max="180" min="-180" step="1" value="35"><span class="text">N/A</span></div>
+                <div class="flex-line">Y: <input id="torseRotationY" type="range" max="180" min="-180" step="1" value="-12"><span class="text">N/A</span></div>
+                <div class="flex-line">Z: <input id="torseRotationZ" type="range" max="180" min="-180" step="1" value="0"><span class="text">N/A</span></div>
+            </fieldset>
+            <fieldset>
+                <legend>Translation</legend>
+                <div class="flex-line">X: <input id="torseTranslationX" type="range" max="1" min="-1" step="0.01" value="0.05"><span class="text">N/A</span></div>
+                <div class="flex-line">Y: <input id="torseTranslationY" type="range" max="1" min="-1" step="0.01" value="0.07"><span class="text">N/A</span></div>
+                <div class="flex-line">Z: <input id="torseTranslationZ" type="range" max="3" min="-5" step="0.01" value="0.9"><span class="text">N/A</span></div>
+            </fieldset>
+        </fieldset>
+        <fieldset>
+            <legend>Head</legend>
+            <fieldset>
+                <legend>Rotation</legend>
+                <div class="flex-line">X: <input id="headRotationX" type="range" max="45" min="-45" step="1" value="-12"><span class="text">N/A</span></div>
+                <div class="flex-line">Y: <input id="headRotationY" type="range" max="105" min="-105" step="1" value="-23"><span class="text">N/A</span></div>
+                <div class="flex-line">Z: <input id="headRotationZ" type="range" max="60" min="-60" step="1" value="0"><span class="text">N/A</span></div>
+            </fieldset>
+        </fieldset>
+        <fieldset>
+            <legend>Left Arm</legend>
+            <fieldset>
+                <legend>Left Arm 1 Rotation</legend>
+                <div class="flex-line">X: <input id="leftArm1RotationX" type="range" max="90" min="-90" step="1" value="-20"><span class="text">N/A</span></div>
+                <div class="flex-line">Y: <input id="leftArm1RotationY" type="range" max="140" min="-60" step="1" value="26"><span class="text">N/A</span></div>
+                <div class="flex-line">Z: <input id="leftArm1RotationZ" type="range" max="90" min="-90" step="1" value="-49"><span class="text">N/A</span></div>
+            </fieldset>
+            <fieldset>
+                <legend>Left Arm 2 Rotation</legend>
+                <div class="flex-line">X: <input id="leftArm2RotationX" type="range" max="90" min="-90" step="1" value="-55"><span class="text">N/A</span></div>
+                <div class="flex-line">Y: <input id="leftArm2RotationY" type="range" max="150" min="0" step="1" value="90"><span class="text">N/A</span></div>
+                <div class="flex-line">Z: <input id="leftArm2RotationZ" type="range" max="120" min="-90" step="1" value="6"><span class="text">N/A</span></div>
+            </fieldset>
+        </fieldset>
+        <fieldset>
+            <legend>Right Arm</legend>
+            <fieldset>
+                <legend>Right Arm 1 Rotation</legend>
+                <div class="flex-line">X: <input id="rightArm1RotationX" type="range" max="90" min="-90"  step="1" value="0"><span class="text">N/A</span></div>
+                <div class="flex-line">Y: <input id="rightArm1RotationY" type="range" max="60" min="-140" step="1" value="-4"><span class="text">N/A</span></div>
+                <div class="flex-line">Z: <input id="rightArm1RotationZ" type="range" max="90" min="-90"  step="1" value="-70"><span class="text">N/A</span></div>
+            </fieldset>
+            <fieldset>
+                <legend>Right Arm 2 Rotation</legend>
+                <div class="flex-line">X: <input id="rightArm2RotationX" type="range" max="90" min="-90"  step="1" value="5"><span class="text">N/A</span></div>
+                <div class="flex-line">Y: <input id="rightArm2RotationY" type="range" max="0" min="-150"  step="1" value="-10"><span class="text">N/A</span></div>
+                <div class="flex-line">Z: <input id="rightArm2RotationZ" type="range" max="90" min="-120" step="1" value="-20"><span class="text">N/A</span></div>
+            </fieldset>
+        </fieldset>
+    </div>
+
+
+</body>
+</html>
