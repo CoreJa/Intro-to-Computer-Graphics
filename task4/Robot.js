@@ -236,6 +236,8 @@ function main(){
 
     const projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
+    gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
+
 
     function render() {
         gl.clearColor(0.9, 0.9, 0.9, 1);
@@ -282,7 +284,7 @@ function main(){
         mat4.rotateZ(body.modelViewMatrix, body.modelViewMatrix, glMatrix.glMatrix.toRadian(parseFloat(torseRotationZ.value)));
         body.inheritedMatrix=mat4.clone(body.modelViewMatrix);
         mat4.scale(body.modelViewMatrix,body.modelViewMatrix,[0.45,0.6,0.15])
-        draw(gl,programInfo,projectionMatrix, body.modelViewMatrix, body.id);
+        draw(gl,programInfo, body.modelViewMatrix, body.id);
 
         // head
         body=bodies[1];
@@ -292,7 +294,7 @@ function main(){
         mat4.rotateZ(body.modelViewMatrix, body.modelViewMatrix, glMatrix.glMatrix.toRadian(parseFloat(headRotationZ.value)));
         mat4.translate(body.modelViewMatrix,body.modelViewMatrix,[0,0.2,0]);
         mat4.scale(body.modelViewMatrix,body.modelViewMatrix,[0.2,0.2,0.15]);
-        draw(gl,programInfo,projectionMatrix, body.modelViewMatrix, body.id);
+        draw(gl,programInfo, body.modelViewMatrix, body.id);
         
         //left arm 1
         body=bodies[2];
@@ -303,7 +305,7 @@ function main(){
         mat4.translate(body.modelViewMatrix,body.modelViewMatrix,[-0.3,0,0]);
         body.inheritedMatrix=mat4.clone(body.modelViewMatrix);
         mat4.scale(body.modelViewMatrix,body.modelViewMatrix,[0.3,0.1,0.1]);
-        draw(gl,programInfo,projectionMatrix, body.modelViewMatrix, body.id);
+        draw(gl,programInfo, body.modelViewMatrix, body.id);
 
         //left arm 2
         body=bodies[3];
@@ -313,7 +315,7 @@ function main(){
         mat4.rotateZ(body.modelViewMatrix, body.modelViewMatrix, glMatrix.glMatrix.toRadian(parseFloat(leftArm2RotationZ.value)));
         mat4.translate(body.modelViewMatrix,body.modelViewMatrix,[-0.3,0,0]);
         mat4.scale(body.modelViewMatrix,body.modelViewMatrix,[0.3,0.08,0.08]);
-        draw(gl,programInfo,projectionMatrix, body.modelViewMatrix, body.id);
+        draw(gl,programInfo, body.modelViewMatrix, body.id);
 
         //right arm 1
         body=bodies[4];
@@ -324,7 +326,7 @@ function main(){
         mat4.translate(body.modelViewMatrix,body.modelViewMatrix,[0.3,0,0]);
         body.inheritedMatrix=mat4.clone(body.modelViewMatrix);
         mat4.scale(body.modelViewMatrix,body.modelViewMatrix,[0.3,0.1,0.1]);
-        draw(gl,programInfo,projectionMatrix, body.modelViewMatrix, body.id);
+        draw(gl,programInfo, body.modelViewMatrix, body.id);
 
         //right arm 2
         body=bodies[3];
@@ -334,7 +336,7 @@ function main(){
         mat4.rotateZ(body.modelViewMatrix, body.modelViewMatrix, glMatrix.glMatrix.toRadian(parseFloat(rightArm2RotationZ.value)));
         mat4.translate(body.modelViewMatrix,body.modelViewMatrix,[0.3,0,0]);
         mat4.scale(body.modelViewMatrix,body.modelViewMatrix,[0.3,0.08,0.08]);
-        draw(gl,programInfo,projectionMatrix, body.modelViewMatrix, body.id);
+        draw(gl,programInfo, body.modelViewMatrix, body.id);
 
         // requestAnimationFrame(render);
     }
@@ -356,9 +358,8 @@ function main(){
  * @param {WebGLRenderingContext} gl 
  * @param {Object} programInfo 
  */
-function draw(gl, programInfo, projectionMatrix, modelViewMatrix, i) {
+function draw(gl, programInfo, modelViewMatrix, i) {
     // Set the shader uniforms
-    gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
     gl.uniformMatrix4fv(programInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
 
     gl.drawElements(gl.TRIANGLES,36,gl.UNSIGNED_SHORT,i*2*36);
