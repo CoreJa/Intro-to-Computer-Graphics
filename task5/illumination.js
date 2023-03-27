@@ -162,7 +162,7 @@ function main() {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);// Clear the canvas before we start drawing on it.
 
         const projectionMatrix = mat4.create();
-        mat4.perspective(projectionMatrix, glMatrix.glMatrix.toRadian(45), gl.canvas.clientWidth / gl.canvas.clientHeight, 0.1, 100);
+        mat4.perspective(projectionMatrix, glMatrix.glMatrix.toRadian(60), gl.canvas.clientWidth / gl.canvas.clientHeight, 0.1, 100);
         const viewMatrix = mat4.create();
         mat4.lookAt(viewMatrix, [0, 0, 3], [0, 0, 0], [0, 1, 0]);
         
@@ -179,7 +179,7 @@ function main() {
         gl.uniform3fv(programInfo.uniformLocations.lightDirection, [lightX, lightY, lightZ]);
 
         const cubeModelMatrix = mat4.create();
-        mat4.translate(cubeModelMatrix, cubeModelMatrix, [0.7, 0.0, 0.0]);
+        mat4.translate(cubeModelMatrix, cubeModelMatrix, [-0.7, 0.0, 0.0]);
         mat4.rotateX(cubeModelMatrix, cubeModelMatrix, time * 0.001);
         mat4.rotateY(cubeModelMatrix, cubeModelMatrix, time * 0.001);
         // mat4.rotateZ(cubeModelMatrix, cubeModelMatrix, time * 0.001);
@@ -188,7 +188,7 @@ function main() {
 
 
         const torusModelMatrix = mat4.create();
-        mat4.translate(torusModelMatrix, torusModelMatrix, [-0.7, 0.0, 0.0]);
+        mat4.translate(torusModelMatrix, torusModelMatrix, [0.7, 0.0, 0.0]);
         mat4.rotateX(torusModelMatrix, torusModelMatrix, time * 0.001);
         mat4.rotateY(torusModelMatrix, torusModelMatrix, time * 0.001);
         // mat4.rotateZ(torusModelMatrix, torusModelMatrix, time * 0.001);
