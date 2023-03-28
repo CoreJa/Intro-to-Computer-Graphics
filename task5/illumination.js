@@ -26,18 +26,13 @@ function createProgram(gl, vertexShader, fragmentShader) {
 }
 
 function initWebGL() {
-    // get canvas from DOM (HTML)
+    // Get canvas from DOM and create WebGLRenderingContext
     let canvas = document.querySelector("#c");
 
     /** @type {WebGLRenderingContext} */
     let gl = canvas.getContext("webgl2");
 
-    // create a shader program
-    /* compile vertex shader source
-   compile fragment shader source
-   create program (using vertex and shader)
-  */
-    // create vertex shader source
+    // Create and compile vertex and fragment shaders
     let vertexShaderSrc = `#version 300 es
     // attributes
     precision highp float;
@@ -88,7 +83,6 @@ function initWebGL() {
         passToFragColor = vec4(diffuseLightColor.xyz * materialColor  * lambert + Ia, 1.0);
         
     }`;
-    // create fragment shaders source
     let fragmentShaderSrc = `#version 300 es
     precision highp float;
 
@@ -118,17 +112,21 @@ function initWebGL() {
             lightDirection: gl.getUniformLocation(program, "lightDirection"),
         },
     }
+    // Set up program information and return it
     return {gl, programInfo};
 }
 
 function initBuffers(gl, programInfo){
+   // Create objects (cube and torus), and combine vertex positions, vertex normals, and indices
     const oCube=cube(0.7);
     const oTorus=uvTorus(0.8,0.4);
     
+    //combine vertex positions, vertex normals, and indices
     const vertexPositions=new Float32Array([...oCube.vertexPositions, ...oTorus.vertexPositions])
     const vertexNormals=new Float32Array([...oCube.vertexNormals, ...oTorus.vertexNormals])
     const indices=new Uint16Array([...oCube.indices, ...oTorus.indices.map(idx=>idx+oCube.vertexPositions.length/3)])
     
+    //Create and bind vertex positions buffer, vertex normals buffer, and indices buffer
     const positionBuffer=gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, vertexPositions, gl.STATIC_DRAW);
@@ -147,37 +145,40 @@ function initBuffers(gl, programInfo){
 }
 
 function main() {
+    // Initialize WebGL, set up buffers, and use the shader program
     let {gl, programInfo}=initWebGL();
     let {oCube, oTorus}=initBuffers(gl,programInfo);
-
     gl.useProgram(programInfo.program);
 
     const mat4=glMatrix.mat4;
 
+    // Set up render function
     function render(time) {
+        // Clear the canvas, set up depth testing, create projection and view matrices
         gl.clearColor(0.1, 0.1, 0.1, 1);
         gl.clearDepth(1.0); // Clear everything
         gl.enable(gl.DEPTH_TEST); // Enable depth testing
         gl.depthFunc(gl.LEQUAL); // Near things obscure far things
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);// Clear the canvas before we start drawing on it.
 
+        // set up projection Matrix and view Matrix
         const projectionMatrix = mat4.create();
         mat4.perspective(projectionMatrix, glMatrix.glMatrix.toRadian(60), gl.canvas.clientWidth / gl.canvas.clientHeight, 0.1, 100);
         const viewMatrix = mat4.create();
         mat4.lookAt(viewMatrix, [0, 0, 3], [0, 0, 0], [0, 1, 0]);
-        
         gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
         gl.uniformMatrix4fv(programInfo.uniformLocations.viewMatrix, false, viewMatrix);
 
+        // Set uniform values for matrices and lighting
         const lightX = parseFloat(document.getElementById('light-x').value);
         const lightY = parseFloat(document.getElementById('light-y').value);
         const lightZ = parseFloat(document.getElementById('light-z').value);
-
         gl.uniform3fv(programInfo.uniformLocations.ambientLightColor, [0.2, 0.2, 0.2]);
         gl.uniform3fv(programInfo.uniformLocations.materialColor, [1, 1, 1]);
         gl.uniform3fv(programInfo.uniformLocations.diffuseLightColor, [1, 1, 1]);
         gl.uniform3fv(programInfo.uniformLocations.lightDirection, [lightX, lightY, lightZ]);
 
+        // set up cube's modelMatrix, translate and rotateXY.
         const cubeModelMatrix = mat4.create();
         mat4.translate(cubeModelMatrix, cubeModelMatrix, [-0.7, 0.0, 0.0]);
         mat4.rotateX(cubeModelMatrix, cubeModelMatrix, time * 0.001);
@@ -186,7 +187,7 @@ function main() {
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, cubeModelMatrix)
         gl.drawElements(gl.TRIANGLES, oCube.indices.length, gl.UNSIGNED_SHORT, 0);
 
-
+        // set up torus' modelMatrix, translate and rotateXY.
         const torusModelMatrix = mat4.create();
         mat4.translate(torusModelMatrix, torusModelMatrix, [0.7, 0.0, 0.0]);
         mat4.rotateX(torusModelMatrix, torusModelMatrix, time * 0.001);
