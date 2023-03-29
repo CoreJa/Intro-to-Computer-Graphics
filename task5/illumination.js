@@ -130,13 +130,13 @@ function initBuffers(gl, programInfo){
     const positionBuffer=gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, vertexPositions, gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
     gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
     const normalBuffer=gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, vertexNormals, gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal);
     gl.vertexAttribPointer(programInfo.attribLocations.vertexNormal, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal);
     const indicesBuffer=gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
@@ -149,6 +149,7 @@ function main() {
     let {gl, programInfo}=initWebGL();
     let {oCube, oTorus}=initBuffers(gl,programInfo);
     gl.useProgram(programInfo.program);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
     const mat4=glMatrix.mat4;
 
