@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>3D World</title>
+  <style>
+    .flex-line{
+      display: flex;
+      align-content: space-between;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .container{
+      display: flex;
+      justify-content: space-between;
+    }
+    fieldset {
+      display: inline;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="800" height="600"></canvas>
+  <div>
+    <fieldset>
+      <legend>Light Position</legend>
+      <div class="flex-line">X: <input id="light-x" type="range" max="3" min="-3" step="0.01" value="1.5"><span class="text">N/A</span></div>
+      <div class="flex-line">Y: <input id="light-y" type="range" max="3" min="-3" step="0.01" value="2.5"><span class="text">N/A</span></div>
+      <div class="flex-line">Z: <input id="light-z" type="range" max="3" min="-3" step="0.01" value="0.5"><span class="text">N/A</span></div>
+    </fieldset>
+    <fieldset>
+      <legend>Camera Specs</legend>
+      <div class="flex-line">X: <span class="coord">N/A</span></div>
+      <div class="flex-line">Y: <span class="coord">N/A</span></div>
+      <div class="flex-line">Z: <span class="coord">N/A</span></div>
+      <div class="flex-line">Angle: <span class="coord">N/A</span></div>
+    </fieldset>
+    <fieldset>
+      <legend>Operations:</legend>
+        <div>Use "W" "A" "S" "D" "I" "K" to adjust camera positions.</div>
+        <div>Use "J" "L" to adjust camera angle.</div>
+    </fieldset>
+</div>
+  <script src="gl-matrix-min.js"></script>
+  <script src="simpleObjectLibrary.js"></script>
+  <script src="3D_World.js"></script>
+</body>
+</html>
