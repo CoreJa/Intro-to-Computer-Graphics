@@ -62,7 +62,6 @@ Initializes the WebGL rendering context and creates vertex and fragment shaders.
 function initWebGL() {
     // Get canvas from DOM and create WebGLRenderingContext
     let canvas = document.querySelector("#c");
-    document.addEventListener('keydown', handleKeyDown);
 
     /** @type {WebGLRenderingContext} */
     let gl = canvas.getContext("webgl2");
@@ -186,7 +185,7 @@ function initBuffers(gl, programInfo){
     colorObject(oCube, [0.9, 0.8, 0.6]);
     colorObject(oTorus, [0.2, 1.0, 0.6]);
     colorObject(oSphere, [0.3, 0.5, 1.0]);
-    colorObject(oCylinder, [0.5, 0.7, 0.5]);
+    colorObject(oCylinder, [0.1, 0.6, 0.9]);
     colorObject(oCone, [0.8, 0.3, 0.5]);
     colorObject(oRing, [1.0, 0.1, 1.0]);
 
@@ -234,47 +233,52 @@ function initBuffers(gl, programInfo){
 
 /**
 Handles keyboard input to control the camera's position and rotation.
-@param {KeyboardEvent} event - The keyboard event.
+@param {Array<number>} cameraPos - The current camera position as an array of three numbers [x, y, z].
+@param {number} cameraRot - The current camera rotation in degrees.
+@returns {{cameraPos: Array<number>, cameraRot: number}} - An object containing the updated camera position and rotation.
 */
-function handleKeyDown(event) {
-    const movePace=0.1;
-    const rotatePace=3;
+function handleKey(cameraPos, cameraRot) {
+    var movePace=0.05;
+    var rotatePace=1;
     cameraRot=cameraRot%360;
+    
+
     var cameraRotRadian=glMatrix.glMatrix.toRadian(cameraRot);
-    switch (event.code) {
-        case "KeyW":
-            cameraPos[0]-=movePace*Math.sin(cameraRotRadian);
-            cameraPos[2]-=movePace*Math.cos(cameraRotRadian);
-            break;
-        case "KeyS":
-            cameraPos[0]+=movePace*Math.sin(cameraRotRadian);
-            cameraPos[2]+=movePace*Math.cos(cameraRotRadian);
-            break;
-        case "KeyA":
-            cameraPos[0]-=movePace*Math.cos(cameraRotRadian);
-            cameraPos[2]+=movePace*Math.sin(cameraRotRadian);
-            break;
-        case "KeyD":
-            cameraPos[0]+=movePace*Math.cos(cameraRotRadian);
-            cameraPos[2]-=movePace*Math.sin(cameraRotRadian);
-            break;
-        case "KeyI":
-            cameraPos[1]+=movePace;
-            break;
-        case "KeyK":
-            if(cameraPos[1]>0.11){
-                cameraPos[1]-=movePace;
-            }
-            break;
-        case "KeyJ":
-            cameraRot+=rotatePace;
-            break;
-        case "KeyL":
-            cameraRot-=rotatePace;
-            break;
-        default:
-            break;
+    if(pressedKeySet.has("ShiftLeft")||pressedKeySet.has("ShiftRight")){
+        movePace=0.2;
+        rotatePace=3;
     }
+    if(pressedKeySet.has("KeyW")){
+        cameraPos[0]-=movePace*Math.sin(cameraRotRadian);
+        cameraPos[2]-=movePace*Math.cos(cameraRotRadian);
+    }
+    if(pressedKeySet.has("KeyS")){
+        cameraPos[0]+=movePace*Math.sin(cameraRotRadian);
+        cameraPos[2]+=movePace*Math.cos(cameraRotRadian);
+    }
+    if(pressedKeySet.has("KeyA")){
+        cameraPos[0]-=movePace*Math.cos(cameraRotRadian);
+        cameraPos[2]+=movePace*Math.sin(cameraRotRadian);
+    }
+    if(pressedKeySet.has("KeyD")){
+        cameraPos[0]+=movePace*Math.cos(cameraRotRadian);
+        cameraPos[2]-=movePace*Math.sin(cameraRotRadian);
+    }
+    if(pressedKeySet.has("KeyI")){
+        cameraPos[1]+=movePace;
+    }
+    if(pressedKeySet.has("KeyK")){
+        if(cameraPos[1]>0.11){
+            cameraPos[1]-=movePace;
+        }
+    }
+    if(pressedKeySet.has("KeyJ")){
+        cameraRot+=rotatePace;
+    }
+    if(pressedKeySet.has("KeyL")){
+        cameraRot-=rotatePace;
+    }
+    return {cameraPos, cameraRot};
 }
 
 /**
@@ -287,11 +291,16 @@ function main() {
 
     gl.useProgram(programInfo.program);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
-    const mat4=glMatrix.mat4;
-
+    
+    var cameraPos = [0, 1.5, 5];
+    var cameraRot = 0;
     // Set up render function
     function render(time) {
+
+        var camera = handleKey(cameraPos, cameraRot);
+        cameraPos=camera.cameraPos;
+        cameraRot=camera.cameraRot;
+
         // Clear the canvas, set up depth testing, create projection and view matrices
         gl.clearColor(0.1, 0.1, 0.1, 1);
         gl.clearDepth(1.0); // Clear everything
@@ -400,10 +409,13 @@ function main() {
 }
 
 //glabal variables
-var cameraPos = [0, 1.5, 5];
-var cameraRot = 0;
+var pressedKeySet = new Set();
+const mat4=glMatrix.mat4;
+const vec3=glMatrix.vec3;
 
 //event listeners
+document.addEventListener('keydown', (event) => {pressedKeySet.add(event.code);});
+document.addEventListener('keyup', (event) => {pressedKeySet.delete(event.code);});
 text=Array.from(document.getElementsByClassName("text"));
 text.forEach(t => {
     t.innerHTML=parseFloat(t.previousElementSibling.value).toFixed(2);
@@ -411,5 +423,4 @@ text.forEach(t => {
         t.innerHTML=parseFloat(t.previousElementSibling.value).toFixed(2);
     })
 });
-
 main();
