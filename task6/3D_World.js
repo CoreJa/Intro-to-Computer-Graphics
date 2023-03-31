@@ -28,7 +28,6 @@ function createProgram(gl, vertexShader, fragmentShader) {
 function initWebGL() {
     // Get canvas from DOM and create WebGLRenderingContext
     let canvas = document.querySelector("#c");
-
     document.addEventListener('keydown', handleKeyDown);
 
     /** @type {WebGLRenderingContext} */
@@ -128,18 +127,42 @@ function colorObject(object, color) {
 
 function initBuffers(gl, programInfo){
    // Create objects (cube and torus), and combine vertex positions, vertex normals, and indices
-    const oCube=cube(0.7);
-    const oTorus=uvTorus(0.8,0.4);
     const oFloor=floor(10);
-    colorObject(oCube, [0.0, 0.0, 1.0]);
-    colorObject(oTorus, [0.0, 1.0, 1.0]);
+    const oLight=uvSphere(0.05);
+    const oCube=cube(0.7);
+    const oTorus=uvTorus(0.8, 0.4);
+    const oSphere=uvSphere(0.1);
+    const oCylinder=uvCylinder(0.9, 0.5);
+    const oCone=uvCone(0.7, 2);
+    const oRing= uvTorus(1.85, 1.75);
+
     colorObject(oFloor, [1.0, 1.0, 1.0]);
-    
+    colorObject(oLight, [10, 10, 1.0]);
+    colorObject(oCube, [0.9, 0.8, 0.6]);
+    colorObject(oTorus, [0.2, 1.0, 0.6]);
+    colorObject(oSphere, [0.3, 0.5, 1.0]);
+    colorObject(oCylinder, [0.5, 0.7, 0.5]);
+    colorObject(oCone, [0.8, 0.3, 0.5]);
+    colorObject(oRing, [1.0, 0.1, 1.0]);
+
+    objects=[oFloor, oLight, oCube, oTorus, oSphere, oCylinder, oCone, oRing];
+    var indices=[];
+    var vertexNormals=[];
+    var vertexPositions=[];
+    var vertexColor=[];
     //combine vertex positions, vertex normals, and indices
-    const indices=new Uint16Array([...oCube.indices, ...oTorus.indices.map(idx=>idx+oCube.vertexPositions.length/3), ...oFloor.indices.map(idx=>idx+oCube.vertexPositions.length/3+oTorus.vertexPositions.length/3)]);
-    const vertexNormals=new Float32Array([...oCube.vertexNormals, ...oTorus.vertexNormals, ...oFloor.vertexNormals]);
-    const vertexPositions=new Float32Array([...oCube.vertexPositions, ...oTorus.vertexPositions, ...oFloor.vertexPositions]);
-    const vertexColor = new Float32Array([...oCube.vertexColor, ...oTorus.vertexColor, ...oFloor.vertexColor]);
+    for (let i = 0; i < objects.length; i++) {
+        const object=objects[i];
+        indices.push(...object.indices.map(idx=>idx+vertexPositions.length/3));
+        vertexNormals.push(...object.vertexNormals);
+        vertexPositions.push(...object.vertexPositions);
+        vertexColor.push(...object.vertexColor);
+    }
+    indices=new Uint16Array(indices);
+    vertexNormals=new Float32Array(vertexNormals);
+    vertexPositions=new Float32Array(vertexPositions);
+    vertexColor=new Float32Array(vertexColor);
+
 
     //Create and bind vertex positions buffer, vertex normals buffer, and indices buffer
     const positionBuffer=gl.createBuffer();
@@ -161,7 +184,7 @@ function initBuffers(gl, programInfo){
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
-    return {oCube, oTorus, oFloor};
+    return {oFloor, oLight, oCube, oTorus, oSphere, oCylinder, oCone, oRing};
 }
 
 function handleKeyDown(event) {
@@ -208,7 +231,8 @@ function handleKeyDown(event) {
 function main() {
     // Initialize WebGL, set up buffers, and use the shader program
     let {gl, programInfo}=initWebGL();
-    let {oCube, oTorus, oFloor}=initBuffers(gl,programInfo);
+    let {oFloor, oLight, oCube, oTorus, oSphere, oCylinder, oCone, oRing}=initBuffers(gl,programInfo);
+
     gl.useProgram(programInfo.program);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
@@ -231,7 +255,7 @@ function main() {
 
         // set up projection Matrix and view Matrix
         const projectionMatrix = mat4.create();
-        mat4.perspective(projectionMatrix, glMatrix.glMatrix.toRadian(60), gl.canvas.clientWidth / gl.canvas.clientHeight, 0.1, 100);
+        mat4.perspective(projectionMatrix, glMatrix.glMatrix.toRadian(60), gl.canvas.clientWidth / gl.canvas.clientHeight, 0.1, 100.0);
         gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
 
         const viewMatrix = mat4.create();
@@ -249,28 +273,73 @@ function main() {
         gl.uniform3fv(programInfo.uniformLocations.diffuseLightColor, [1, 1, 1]);
         gl.uniform3fv(programInfo.uniformLocations.lightDirection, [lightX, lightY, lightZ]);
 
+        var indices_offset=0;
+        
+        // set up floor's modelMatrix.
+        const floorMatrix = mat4.create();
+        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, floorMatrix);
+        gl.drawElements(gl.TRIANGLES, oFloor.indices.length, gl.UNSIGNED_SHORT, indices_offset);
+        indices_offset+=oFloor.indices.length*2;
+
+        // set up light's modelMatrix, translate.
+        const lightMatrix = mat4.create();
+        mat4.translate(lightMatrix, lightMatrix, [lightX, lightY, lightZ]);
+        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, lightMatrix);
+        gl.drawElements(gl.TRIANGLES, oLight.indices.length, gl.UNSIGNED_SHORT, indices_offset);
+        indices_offset+=oLight.indices.length*2;
+
         // set up cube's modelMatrix, translate and rotateXY.
         const cubeModelMatrix = mat4.create();
-        mat4.translate(cubeModelMatrix, cubeModelMatrix, [-0.7, 1.0, 0.0]);
+        mat4.translate(cubeModelMatrix, cubeModelMatrix, [-0.8, 1.0, 0.0]);
         mat4.rotateX(cubeModelMatrix, cubeModelMatrix, time * 0.001);
-        // mat4.rotateY(cubeModelMatrix, cubeModelMatrix, time * 0.001);
-        // mat4.rotateZ(cubeModelMatrix, cubeModelMatrix, time * 0.001);
+        mat4.rotateY(cubeModelMatrix, cubeModelMatrix, time * 0.001);
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, cubeModelMatrix);
-        gl.drawElements(gl.TRIANGLES, oCube.indices.length, gl.UNSIGNED_SHORT, 0);
+        gl.drawElements(gl.TRIANGLES, oCube.indices.length, gl.UNSIGNED_SHORT, indices_offset);
+        indices_offset+=oCube.indices.length*2;
 
-        // set up torus' modelMatrix, translate and rotateXY.
+        // set up torus' modelMatrix, translate and rotateX.
         const torusModelMatrix = mat4.create();
-        mat4.translate(torusModelMatrix, torusModelMatrix, [0.7, 1.0, 0.0]);
+        mat4.translate(torusModelMatrix, torusModelMatrix, [1.2, 1.0, 0.0]);
         // mat4.rotateX(torusModelMatrix, torusModelMatrix, time * 0.001);
         mat4.rotateY(torusModelMatrix, torusModelMatrix, time * 0.001);
         // mat4.rotateZ(torusModelMatrix, torusModelMatrix, time * 0.001);
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, torusModelMatrix);
-        gl.drawElements(gl.TRIANGLES, oTorus.indices.length, gl.UNSIGNED_SHORT, oCube.indices.length*2);
+        gl.drawElements(gl.TRIANGLES, oTorus.indices.length, gl.UNSIGNED_SHORT, indices_offset);
+        indices_offset+=oTorus.indices.length*2;
 
-        const floorMatrix = mat4.create();
-        mat4.translate(floorMatrix, floorMatrix, [0.0, 0.0, 0.0]);
-        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, floorMatrix);
-        gl.drawElements(gl.TRIANGLES, oFloor.indices.length, gl.UNSIGNED_SHORT, (oCube.indices.length+oTorus.indices.length)*2);
+        // set up sphere's modelMatrix, translate and rotation.
+        const sphereModelMatrix =mat4.copy(mat4.create(),torusModelMatrix);
+        mat4.translate(sphereModelMatrix, sphereModelMatrix, [-0.6*Math.sqrt(2), 0.0, 0.0]);
+        mat4.rotate(sphereModelMatrix, sphereModelMatrix, time * 0.005, [1, 1, 0]);
+        mat4.translate(sphereModelMatrix, sphereModelMatrix, [0.6*Math.sqrt(2), 0.0, 0.0]);
+        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, sphereModelMatrix);
+        gl.drawElements(gl.TRIANGLES, oSphere.indices.length, gl.UNSIGNED_SHORT, indices_offset);
+        indices_offset+=oSphere.indices.length*2;
+
+        // set up cylinder's modelMatrix, translate and rotation.
+        const cylinderModelMatrix = mat4.create();
+        mat4.translate(cylinderModelMatrix, cylinderModelMatrix, [0.0, 3.0, -6.0]);
+        mat4.translate(cylinderModelMatrix, cylinderModelMatrix, [3.0*Math.sin(0.0025*time), 1.2*Math.sin(0.005* time), 0.0]);
+        mat4.rotateX(cylinderModelMatrix, cylinderModelMatrix, glMatrix.glMatrix.toRadian(135));
+        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, cylinderModelMatrix);
+        gl.drawElements(gl.TRIANGLES, oCylinder.indices.length, gl.UNSIGNED_SHORT, indices_offset);
+        indices_offset+=oCylinder.indices.length*2;
+
+        // set up cone's modelMatrix, translate and rotation.
+        const coneModelMatrix = mat4.copy(mat4.create(),cylinderModelMatrix);
+        mat4.translate(coneModelMatrix, coneModelMatrix, [0.0, 0.0, -1.5]);
+        mat4.rotateX(coneModelMatrix, coneModelMatrix, glMatrix.glMatrix.toRadian(180));
+        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, coneModelMatrix);
+        gl.drawElements(gl.TRIANGLES, oCone.indices.length, gl.UNSIGNED_SHORT, indices_offset);
+        indices_offset+=oCone.indices.length*2;
+
+        const ringModelMatrix = mat4.copy(mat4.create(),cylinderModelMatrix);
+        mat4.translate(ringModelMatrix, ringModelMatrix, [0.0, 0.0, -1.125]);
+        mat4.rotateZ(ringModelMatrix, ringModelMatrix, time * 0.01);
+        mat4.rotateY(ringModelMatrix, ringModelMatrix, glMatrix.glMatrix.toRadian(90));
+        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, ringModelMatrix);
+        gl.drawElements(gl.TRIANGLES, oRing.indices.length, gl.UNSIGNED_SHORT, indices_offset);
+        indices_offset+=oRing.indices.length*2;
 
         requestAnimationFrame(render);
     }
@@ -278,13 +347,17 @@ function main() {
 
 }
 
-main();
-var cameraPos = [0, 1, 4];
+//glabal variables
+var cameraPos = [0, 1.5, 5];
 var cameraRot = 0;
+
+//event listeners
 text=Array.from(document.getElementsByClassName("text"));
 text.forEach(t => {
-    t.innerHTML=t.previousElementSibling.value;
+    t.innerHTML=parseFloat(t.previousElementSibling.value).toFixed(2);
     t.previousElementSibling.addEventListener("input",()=>{
-        t.innerHTML=t.previousElementSibling.value;
+        t.innerHTML=parseFloat(t.previousElementSibling.value).toFixed(2);
     })
 });
+
+main();
