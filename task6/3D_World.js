@@ -1,4 +1,11 @@
-// we need a function to compile shaders
+/**
+Creates a shader object from given source code and compiles it.
+@param {WebGLRenderingContext} gl - The WebGL rendering context.
+@param {number} type - The type of shader (VERTEX_SHADER or FRAGMENT_SHADER).
+@param {string} source - The source code of the shader.
+@returns {WebGLShader} The compiled shader object.
+*/
+
 function createShader(gl, type, source) {
     let shader = gl.createShader(type);
     gl.shaderSource(shader, source);
@@ -11,7 +18,13 @@ function createShader(gl, type, source) {
     gl.deleteShader(shader);
 }
 
-// we need a function to link shaders into a program
+/**
+Links vertex and fragment shaders into a program object.
+@param {WebGLRenderingContext} gl - The WebGL rendering context.
+@param {WebGLShader} vertexShader - The compiled vertex shader object.
+@param {WebGLShader} fragmentShader - The compiled fragment shader object.
+@returns {WebGLProgram} The linked program object.
+*/
 function createProgram(gl, vertexShader, fragmentShader) {
     let program = gl.createProgram();
     gl.attachShader(program, vertexShader);
@@ -25,6 +38,27 @@ function createProgram(gl, vertexShader, fragmentShader) {
     gl.deleteProgram(program);
 }
 
+
+/**
+Initializes the WebGL rendering context and creates vertex and fragment shaders.
+@returns {{
+    gl: WebGLRenderingContext, 
+    programInfo: {
+        program: WebGLProgram,
+        attribLocations: {
+            vertexPosition: number, 
+            vertexNormal: number, 
+            vertexColor: number 
+        },uniformLocations: { 
+            projectionMatrix: WebGLUniformLocation,
+            modelToWorldMatrix: WebGLUniformLocation,
+            viewMatrix: WebGLUniformLocation,
+            ambientLightColor: WebGLUniformLocation,
+            diffuseLightColor: WebGLUniformLocation,
+            lightDirection: WebGLUniformLocation 
+        }}
+}} Object containing the WebGLRenderingContext and program information.
+*/
 function initWebGL() {
     // Get canvas from DOM and create WebGLRenderingContext
     let canvas = document.querySelector("#c");
@@ -117,6 +151,11 @@ function initWebGL() {
     return {gl, programInfo};
 }
 
+/**
+Sets the color of a given object by assigning color values to its vertices.
+@param {Object} object - The object whose color will be set.
+@param {number[]} color - An array of RGB color values.
+*/
 function colorObject(object, color) {
     var vertexColor = [];
     for (let i = 0; i < object.vertexPositions.length; i += 3) {
@@ -125,6 +164,12 @@ function colorObject(object, color) {
     object.vertexColor= new Float32Array(vertexColor);
 }
 
+/**
+Creates and combines vertex positions, vertex normals, and indices for multiple objects, then creates and binds buffers for the data.
+@param {WebGLRenderingContext} gl - The WebGL rendering context.
+@param {Object} programInfo - Information about the shader program.
+@returns {Object} An object containing the buffers for each object.
+*/
 function initBuffers(gl, programInfo){
    // Create objects (cube and torus), and combine vertex positions, vertex normals, and indices
     const oFloor=floor(10);
@@ -187,6 +232,10 @@ function initBuffers(gl, programInfo){
     return {oFloor, oLight, oCube, oTorus, oSphere, oCylinder, oCone, oRing};
 }
 
+/**
+Handles keyboard input to control the camera's position and rotation.
+@param {KeyboardEvent} event - The keyboard event.
+*/
 function handleKeyDown(event) {
     const movePace=0.1;
     const rotatePace=3;
@@ -228,6 +277,9 @@ function handleKeyDown(event) {
     }
 }
 
+/**
+Initializes WebGL, sets up buffers, and uses the shader program to render a scene.
+*/
 function main() {
     // Initialize WebGL, set up buffers, and use the shader program
     let {gl, programInfo}=initWebGL();
