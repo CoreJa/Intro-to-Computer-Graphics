@@ -17,7 +17,14 @@
       gap: 20px;
     }
     fieldset {
-      display: inline;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .camera {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
     }
     .text {
       width: 36px;
@@ -37,12 +44,20 @@
       <div class="flex-line">Y: <input id="light-y" type="range" max="5" min="-5" step="0.01" value="3.0"><span class="text">N/A</span></div>
       <div class="flex-line">Z: <input id="light-z" type="range" max="5" min="-5" step="0.01" value="1.5"><span class="text">N/A</span></div>
     </fieldset>
-    <fieldset>
+    <fieldset class="camera">
       <legend>Camera Specs</legend>
-      <div class="flex-line">X: <span class="coord">N/A</span></div>
-      <div class="flex-line">Y: <span class="coord">N/A</span></div>
-      <div class="flex-line">Z: <span class="coord">N/A</span></div>
-      <div class="flex-line">Angle: <span class="coord">N/A</span></div>
+      <fieldset>
+        <legend>Position</legend>
+        <div class="flex-line">X: <span class="coord">N/A</span></div>
+        <div class="flex-line">Y: <span class="coord">N/A</span></div>
+        <div class="flex-line">Z: <span class="coord">N/A</span></div>
+      </fieldset>
+      <fieldset>
+        <legend>Direction</legend>
+        <div class="flex-line">X: <span class="coord">N/A</span></div>
+        <div class="flex-line">Y: <span class="coord">N/A</span></div>
+        <div class="flex-line">Z: <span class="coord">N/A</span></div>
+      </fieldset>
     </fieldset>
     <fieldset>
       <legend>Operations:</legend>

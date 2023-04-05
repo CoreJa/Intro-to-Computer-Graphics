@@ -233,52 +233,44 @@ function initBuffers(gl, programInfo){
 
 /**
 Handles keyboard input to control the camera's position and rotation.
-@param {Array<number>} cameraPos - The current camera position as an array of three numbers [x, y, z].
+@param {Array<number>} camera.pos - The current camera position as an array of three numbers [x, y, z].
 @param {number} cameraRot - The current camera rotation in degrees.
-@returns {{cameraPos: Array<number>, cameraRot: number}} - An object containing the updated camera position and rotation.
+@returns {{camera.pos: Array<number>, cameraRot: number}} - An object containing the updated camera position and rotation.
 */
-function handleKey(cameraPos, cameraRot) {
+function handleKey(camera) {
     var movePace=0.05;
     var rotatePace=1;
-    cameraRot=cameraRot%360;
-    
-
-    var cameraRotRadian=glMatrix.glMatrix.toRadian(cameraRot);
     if(pressedKeySet.has("ShiftLeft")||pressedKeySet.has("ShiftRight")){
         movePace=0.2;
         rotatePace=3;
     }
     if(pressedKeySet.has("KeyW")){
-        cameraPos[0]-=movePace*Math.sin(cameraRotRadian);
-        cameraPos[2]-=movePace*Math.cos(cameraRotRadian);
+        vec3.scaleAndAdd(camera.pos, camera.pos, camera.direction, movePace);
     }
     if(pressedKeySet.has("KeyS")){
-        cameraPos[0]+=movePace*Math.sin(cameraRotRadian);
-        cameraPos[2]+=movePace*Math.cos(cameraRotRadian);
+        vec3.scaleAndAdd(camera.pos, camera.pos, camera.direction, -movePace);
     }
     if(pressedKeySet.has("KeyA")){
-        cameraPos[0]-=movePace*Math.cos(cameraRotRadian);
-        cameraPos[2]+=movePace*Math.sin(cameraRotRadian);
+        vec3.scaleAndAdd(camera.pos, camera.pos, vec3.cross([], camera.direction, camera.up), -movePace);
     }
     if(pressedKeySet.has("KeyD")){
-        cameraPos[0]+=movePace*Math.cos(cameraRotRadian);
-        cameraPos[2]-=movePace*Math.sin(cameraRotRadian);
+        vec3.scaleAndAdd(camera.pos, camera.pos, vec3.cross([], camera.direction, camera.up), movePace);
     }
     if(pressedKeySet.has("KeyI")){
-        cameraPos[1]+=movePace;
+        vec3.scaleAndAdd(camera.pos, camera.pos, camera.up, movePace);
     }
     if(pressedKeySet.has("KeyK")){
-        if(cameraPos[1]>0.11){
-            cameraPos[1]-=movePace;
+        if(camera.pos[1]>0.11){
+            vec3.scaleAndAdd(camera.pos, camera.pos, camera.up, -movePace);
         }
     }
     if(pressedKeySet.has("KeyJ")){
-        cameraRot+=rotatePace;
+        vec3.rotateY(camera.direction, camera.direction, [0, 0, 0], glMatrix.glMatrix.toRadian(rotatePace));
     }
     if(pressedKeySet.has("KeyL")){
-        cameraRot-=rotatePace;
+        vec3.rotateY(camera.direction, camera.direction, [0, 0, 0], glMatrix.glMatrix.toRadian(-rotatePace));
     }
-    return {cameraPos, cameraRot};
+    return camera;
 }
 
 /**
@@ -292,15 +284,13 @@ function main() {
     gl.useProgram(programInfo.program);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     
-    var cameraPos = [0, 1.5, 5];
-    var cameraRot = 0;
+    var camera={
+        pos: [0, 1.5, 5], 
+        direction: [0, 0, -1], 
+        up: [0, 1, 0],
+    }
     // Set up render function
     function render(time) {
-
-        var camera = handleKey(cameraPos, cameraRot);
-        cameraPos=camera.cameraPos;
-        cameraRot=camera.cameraRot;
-
         // Clear the canvas, set up depth testing, create projection and view matrices
         gl.clearColor(0.1, 0.1, 0.1, 1);
         gl.clearDepth(1.0); // Clear everything
@@ -308,11 +298,14 @@ function main() {
         gl.depthFunc(gl.LEQUAL); // Near things obscure far things
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);// Clear the canvas before we start drawing on it.
 
+        handleKey(camera);
         coords=Array.from(document.getElementsByClassName("coord"));
-        coords[0].innerHTML=cameraPos[0].toFixed(2);
-        coords[1].innerHTML=cameraPos[1].toFixed(2);
-        coords[2].innerHTML=cameraPos[2].toFixed(2);
-        coords[3].innerHTML=cameraRot.toFixed(2);
+        coords[0].innerHTML=camera.pos[0].toFixed(2);
+        coords[1].innerHTML=camera.pos[1].toFixed(2);
+        coords[2].innerHTML=camera.pos[2].toFixed(2);
+        coords[3].innerHTML=camera.direction[0].toFixed(2);
+        coords[4].innerHTML=camera.direction[1].toFixed(2);
+        coords[5].innerHTML=camera.direction[2].toFixed(2);
 
         // set up projection Matrix and view Matrix
         const projectionMatrix = mat4.create();
@@ -320,10 +313,7 @@ function main() {
         gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
 
         const viewMatrix = mat4.create();
-        mat4.lookAt(viewMatrix, [0, 0, 0], [0, 0, 0], [0, 1, 0]);
-        mat4.rotateY(viewMatrix, viewMatrix, glMatrix.glMatrix.toRadian(-cameraRot));
-        mat4.translate(viewMatrix,viewMatrix, cameraPos.map(x=>-x));
-        // mat4.multiply(viewMatrix, x, viewMatrix);
+        mat4.lookAt(viewMatrix, camera.pos, vec3.add([], camera.pos, camera.direction), camera.up);
         gl.uniformMatrix4fv(programInfo.uniformLocations.viewMatrix, false, viewMatrix);
 
         // Set uniform values for matrices and lighting
