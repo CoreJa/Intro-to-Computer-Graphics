@@ -51,7 +51,7 @@ Initializes the WebGL rendering context and creates vertex and fragment shaders.
             vertexColor: number 
         },uniformLocations: { 
             projectionMatrix: WebGLUniformLocation,
-            modelToWorldMatrix: WebGLUniformLocation,
+            modelMatrix: WebGLUniformLocation,
             viewMatrix: WebGLUniformLocation,
             ambientLightColor: WebGLUniformLocation,
             diffuseLightColor: WebGLUniformLocation,
@@ -59,7 +59,7 @@ Initializes the WebGL rendering context and creates vertex and fragment shaders.
         }}
 }} Object containing the WebGLRenderingContext and program information.
 */
-function initWebGL() {
+async function initWebGL() {
     // Get canvas from DOM and create WebGLRenderingContext
     let canvas = document.querySelector("#c");
 
@@ -67,64 +67,9 @@ function initWebGL() {
     let gl = canvas.getContext("webgl2");
 
     // Create and compile vertex and fragment shaders
-    let vertexShaderSrc = `#version 300 es
-    // attributes
-    precision highp float;
-
-    in vec3 vertPosition;
-    in vec3 vertNormal; // NEW !!!!, need for N * L
-    in vec3 vertColor;
+    let vertexShaderSrc = await (await fetch("./shader.vert")).text();
+    let fragmentShaderSrc = await (await fetch("./shader.frag")).text();
     
-    uniform mat4 projMatrix;
-    uniform mat4 modelToWorldMatrix;
-    uniform mat4 viewMatrix;  
-    
-    // New!!! new uniforms for 
-    // material color and ambient light
-    uniform vec3 ambientLightColor;
-    
-    // NEW!!! Directional Light uniforms (direction and color)
-    uniform vec3 lightDirection;
-    uniform vec3 diffuseLightColor;
-    
-    // illumination color we pass to fragment shader
-    out vec4 passToFragColor;
-    
-    void main(){
-        gl_Position = projMatrix * viewMatrix *modelToWorldMatrix * vec4(vertPosition,1.0);
-
-        // Iambient  = IambientColor * vertColor
-        vec3 Ia = ambientLightColor * vertColor;
-    
-        // calculate Idiffuse = IdiffuseColor * vertColor * ( N* L) 
-        // need unit vectors and 
-        // transpose(inverse(viewMatrix * modelMatrix)). The Transpose-Inverse matrix is used to orientate normals
-        mat4 normalMatrix = transpose(inverse( modelToWorldMatrix));
-    
-        // get normal after it was moved to world space, multiply it by the normalMatrix and normlize
-        vec3 N = normalize(vec3( normalMatrix * vec4(vertNormal, 0.0)));
-       
-        // Now calcuate L by
-        // 1. get vertex position in world space
-        vec3 fragPosition = vec3(modelToWorldMatrix * vec4(vertPosition, 1.0)) ; 
-    
-        // 2. subtract to get vector to light from vertex position. this gives us L
-        vec3 diffuseLightDirection = normalize( lightDirection - fragPosition); // get a vector from point to light source
-        
-    
-        vec3 L = diffuseLightDirection ; 
-        float lambert = max(0.0, dot(N, L));
-        passToFragColor = vec4(diffuseLightColor.xyz * vertColor  * lambert + Ia, 1.0);
-        
-    }`;
-    let fragmentShaderSrc = `#version 300 es
-    precision highp float;
-
-    in vec4 passToFragColor;
-    out vec4 fragColor;
-    void main(){
-        fragColor = passToFragColor;
-    }`;
     let vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
     let fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc);
     let program = createProgram(gl, vertexShader, fragmentShader);
@@ -133,14 +78,16 @@ function initWebGL() {
     const programInfo={
         program: program,
         attribLocations:{
-            vertexPosition: gl.getAttribLocation(program, "vertPosition"),
-            vertexNormal: gl.getAttribLocation(program, "vertNormal"),
-            vertexColor: gl.getAttribLocation(program, "vertColor"),
+            vertexPosition: gl.getAttribLocation(program, "a_position"),
+            vertexNormal: gl.getAttribLocation(program, "a_normal"),
+            vertexColor: gl.getAttribLocation(program, "a_color"),
+            textureCoord: gl.getAttribLocation(program, "a_texCoord"),
         },
         uniformLocations:{
-            projectionMatrix: gl.getUniformLocation(program, "projMatrix"),
-            modelToWorldMatrix: gl.getUniformLocation(program, "modelToWorldMatrix"),
-            viewMatrix: gl.getUniformLocation(program, "viewMatrix"),
+            projectionMatrix: gl.getUniformLocation(program, "u_projMatrix"),
+            modelMatrix: gl.getUniformLocation(program, "u_modelMatrix"),
+            normalMatrix: gl.getUniformLocation(program, "u_normalMatrix"),
+            viewMatrix: gl.getUniformLocation(program, "u_viewMatrix"),
             ambientLightColor: gl.getUniformLocation(program, "ambientLightColor"),
             diffuseLightColor: gl.getUniformLocation(program, "diffuseLightColor"),
             lightDirection: gl.getUniformLocation(program, "lightDirection"),
@@ -190,6 +137,8 @@ function initBuffers(gl, programInfo){
     colorObject(oRing, [1.0, 0.1, 1.0]);
 
     objects=[oFloor, oLight, oCube, oTorus, oSphere, oCylinder, oCone, oRing];
+    objects.map(obj=>obj.modelMatrix=mat4.create());
+
     var indices=[];
     var vertexNormals=[];
     var vertexPositions=[];
@@ -228,7 +177,7 @@ function initBuffers(gl, programInfo){
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
 
-    return {oFloor, oLight, oCube, oTorus, oSphere, oCylinder, oCone, oRing};
+    return objects;
 }
 
 /**
@@ -273,19 +222,56 @@ function handleKey(camera) {
     return camera;
 }
 
+function modelMatrixAnimation(objects, time) {
+    let [oFloor, oLight, oCube, oTorus, oSphere, oCylinder, oCone, oRing]=objects;
+
+    const lightX = parseFloat(document.getElementById('light-x').value);
+    const lightY = parseFloat(document.getElementById('light-y').value);
+    const lightZ = parseFloat(document.getElementById('light-z').value);
+    mat4.translate(oLight.modelMatrix, mat4.create(), [lightX, lightY, lightZ]);
+
+    mat4.translate(oCube.modelMatrix, mat4.create(), [-0.8, 1.0, 0.0]);
+    mat4.rotateX(oCube.modelMatrix, oCube.modelMatrix, time * 0.001);
+    mat4.rotateY(oCube.modelMatrix, oCube.modelMatrix, time * 0.001);
+
+    mat4.translate(oTorus.modelMatrix, mat4.create(), [1.2, 1.0, 0.0]);
+    // mat4.rotateX(oTorus.modelMatrix, oTorus.modelMatrix, time * 0.001);
+    mat4.rotateY(oTorus.modelMatrix, oTorus.modelMatrix, time * 0.001);
+    // mat4.rotateZ(oTorus.modelMatrix, oTorus.modelMatrix, time * 0.001);
+
+    mat4.copy(oSphere.modelMatrix,oTorus.modelMatrix);
+    mat4.translate(oSphere.modelMatrix, oSphere.modelMatrix, [-0.6*Math.sqrt(2), 0.0, 0.0]);
+    mat4.rotate(oSphere.modelMatrix, oSphere.modelMatrix, time * 0.005, [1, 1, 0]);
+    mat4.translate(oSphere.modelMatrix, oSphere.modelMatrix, [0.6*Math.sqrt(2), 0.0, 0.0]);
+
+    mat4.translate(oCylinder.modelMatrix, mat4.create(), [0.0, 3.0, -3.0]);
+    mat4.translate(oCylinder.modelMatrix, oCylinder.modelMatrix, [3.0*Math.sin(0.0025*time), 1.2*Math.sin(0.005* time), 0.0]);
+    mat4.rotateX(oCylinder.modelMatrix, oCylinder.modelMatrix, glMatrix.glMatrix.toRadian(135));
+
+    mat4.copy(oCone.modelMatrix, oCylinder.modelMatrix);
+    mat4.translate(oCone.modelMatrix, oCone.modelMatrix, [0.0, 0.0, -1.5]);
+    mat4.rotateX(oCone.modelMatrix, oCone.modelMatrix, glMatrix.glMatrix.toRadian(180));
+
+    mat4.copy(oRing.modelMatrix, oCylinder.modelMatrix);
+    mat4.translate(oRing.modelMatrix, oRing.modelMatrix, [0.0, 0.0, -1.125]);
+    mat4.rotateZ(oRing.modelMatrix, oRing.modelMatrix, time * 0.01);
+    mat4.rotateY(oRing.modelMatrix, oRing.modelMatrix, glMatrix.glMatrix.toRadian(90));
+
+}
+
 /**
 Initializes WebGL, sets up buffers, and uses the shader program to render a scene.
 */
-function main() {
+async function main() {
     // Initialize WebGL, set up buffers, and use the shader program
-    let {gl, programInfo}=initWebGL();
-    let {oFloor, oLight, oCube, oTorus, oSphere, oCylinder, oCone, oRing}=initBuffers(gl,programInfo);
+    let {gl, programInfo} = await initWebGL();
+    var objects = initBuffers(gl,programInfo);
 
     gl.useProgram(programInfo.program);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     
     var camera={
-        pos: [0, 1.5, 5], 
+        pos: [0, 2.5, 5], 
         direction: [0, 0, -1], 
         up: [0, 1, 0],
     }
@@ -307,11 +293,12 @@ function main() {
         coords[4].innerHTML=camera.direction[1].toFixed(2);
         coords[5].innerHTML=camera.direction[2].toFixed(2);
 
-        // set up projection Matrix and view Matrix
+        // set up projection Matrix
         const projectionMatrix = mat4.create();
         mat4.perspective(projectionMatrix, glMatrix.glMatrix.toRadian(60), gl.canvas.clientWidth / gl.canvas.clientHeight, 0.1, 100.0);
         gl.uniformMatrix4fv(programInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
 
+        // set up view Matrix
         const viewMatrix = mat4.create();
         mat4.lookAt(viewMatrix, camera.pos, vec3.add([], camera.pos, camera.direction), camera.up);
         gl.uniformMatrix4fv(programInfo.uniformLocations.viewMatrix, false, viewMatrix);
@@ -324,74 +311,17 @@ function main() {
         gl.uniform3fv(programInfo.uniformLocations.diffuseLightColor, [1, 1, 1]);
         gl.uniform3fv(programInfo.uniformLocations.lightDirection, [lightX, lightY, lightZ]);
 
+        // Set model matrix for each object
+        modelMatrixAnimation(objects, time);
+
+        // Draw objects
         var indices_offset=0;
-        
-        // set up floor's modelMatrix.
-        const floorMatrix = mat4.create();
-        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, floorMatrix);
-        gl.drawElements(gl.TRIANGLES, oFloor.indices.length, gl.UNSIGNED_SHORT, indices_offset);
-        indices_offset+=oFloor.indices.length*2;
-
-        // set up light's modelMatrix, translate.
-        const lightMatrix = mat4.create();
-        mat4.translate(lightMatrix, lightMatrix, [lightX, lightY, lightZ]);
-        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, lightMatrix);
-        gl.drawElements(gl.TRIANGLES, oLight.indices.length, gl.UNSIGNED_SHORT, indices_offset);
-        indices_offset+=oLight.indices.length*2;
-
-        // set up cube's modelMatrix, translate and rotateXY.
-        const cubeModelMatrix = mat4.create();
-        mat4.translate(cubeModelMatrix, cubeModelMatrix, [-0.8, 1.0, 0.0]);
-        mat4.rotateX(cubeModelMatrix, cubeModelMatrix, time * 0.001);
-        mat4.rotateY(cubeModelMatrix, cubeModelMatrix, time * 0.001);
-        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, cubeModelMatrix);
-        gl.drawElements(gl.TRIANGLES, oCube.indices.length, gl.UNSIGNED_SHORT, indices_offset);
-        indices_offset+=oCube.indices.length*2;
-
-        // set up torus' modelMatrix, translate and rotateX.
-        const torusModelMatrix = mat4.create();
-        mat4.translate(torusModelMatrix, torusModelMatrix, [1.2, 1.0, 0.0]);
-        // mat4.rotateX(torusModelMatrix, torusModelMatrix, time * 0.001);
-        mat4.rotateY(torusModelMatrix, torusModelMatrix, time * 0.001);
-        // mat4.rotateZ(torusModelMatrix, torusModelMatrix, time * 0.001);
-        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, torusModelMatrix);
-        gl.drawElements(gl.TRIANGLES, oTorus.indices.length, gl.UNSIGNED_SHORT, indices_offset);
-        indices_offset+=oTorus.indices.length*2;
-
-        // set up sphere's modelMatrix, translate and rotation.
-        const sphereModelMatrix =mat4.copy(mat4.create(),torusModelMatrix);
-        mat4.translate(sphereModelMatrix, sphereModelMatrix, [-0.6*Math.sqrt(2), 0.0, 0.0]);
-        mat4.rotate(sphereModelMatrix, sphereModelMatrix, time * 0.005, [1, 1, 0]);
-        mat4.translate(sphereModelMatrix, sphereModelMatrix, [0.6*Math.sqrt(2), 0.0, 0.0]);
-        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, sphereModelMatrix);
-        gl.drawElements(gl.TRIANGLES, oSphere.indices.length, gl.UNSIGNED_SHORT, indices_offset);
-        indices_offset+=oSphere.indices.length*2;
-
-        // set up cylinder's modelMatrix, translate and rotation.
-        const cylinderModelMatrix = mat4.create();
-        mat4.translate(cylinderModelMatrix, cylinderModelMatrix, [0.0, 3.0, -6.0]);
-        mat4.translate(cylinderModelMatrix, cylinderModelMatrix, [3.0*Math.sin(0.0025*time), 1.2*Math.sin(0.005* time), 0.0]);
-        mat4.rotateX(cylinderModelMatrix, cylinderModelMatrix, glMatrix.glMatrix.toRadian(135));
-        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, cylinderModelMatrix);
-        gl.drawElements(gl.TRIANGLES, oCylinder.indices.length, gl.UNSIGNED_SHORT, indices_offset);
-        indices_offset+=oCylinder.indices.length*2;
-
-        // set up cone's modelMatrix, translate and rotation.
-        const coneModelMatrix = mat4.copy(mat4.create(),cylinderModelMatrix);
-        mat4.translate(coneModelMatrix, coneModelMatrix, [0.0, 0.0, -1.5]);
-        mat4.rotateX(coneModelMatrix, coneModelMatrix, glMatrix.glMatrix.toRadian(180));
-        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, coneModelMatrix);
-        gl.drawElements(gl.TRIANGLES, oCone.indices.length, gl.UNSIGNED_SHORT, indices_offset);
-        indices_offset+=oCone.indices.length*2;
-
-        const ringModelMatrix = mat4.copy(mat4.create(),cylinderModelMatrix);
-        mat4.translate(ringModelMatrix, ringModelMatrix, [0.0, 0.0, -1.125]);
-        mat4.rotateZ(ringModelMatrix, ringModelMatrix, time * 0.01);
-        mat4.rotateY(ringModelMatrix, ringModelMatrix, glMatrix.glMatrix.toRadian(90));
-        gl.uniformMatrix4fv(programInfo.uniformLocations.modelToWorldMatrix, false, ringModelMatrix);
-        gl.drawElements(gl.TRIANGLES, oRing.indices.length, gl.UNSIGNED_SHORT, indices_offset);
-        indices_offset+=oRing.indices.length*2;
-
+        for (let i = 0; i < objects.length; i++) {
+            gl.uniformMatrix4fv(programInfo.uniformLocations.modelMatrix, false, objects[i].modelMatrix);
+            gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix, false, mat4.transpose([], mat4.invert([], objects[i].modelMatrix)));
+            gl.drawElements(gl.TRIANGLES, objects[i].indices.length, gl.UNSIGNED_SHORT, indices_offset);
+            indices_offset+=objects[i].indices.length*2;
+        }
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
