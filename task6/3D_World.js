@@ -209,11 +209,37 @@ function handleKey(camera) {
 function modelMatrixAnimation(objects, time) {
     let [oFloor, oLight, oCube, oTorus, oSphere, oCylinder, oCone, oRing]=objects;
 
+    const lightX = parseFloat(document.getElementById('light-x').value);
+    const lightY = parseFloat(document.getElementById('light-y').value);
+    const lightZ = parseFloat(document.getElementById('light-z').value);
     mat4.translate(oLight.modelMatrix, mat4.create(), [lightX, lightY, lightZ]);
 
-    mat4.translate(oCube.modelMatrix, mat4.create(), [0.0, 1.0, 0.0]);
+    mat4.translate(oCube.modelMatrix, mat4.create(), [-0.8, 1.0, 0.0]);
     mat4.rotateX(oCube.modelMatrix, oCube.modelMatrix, time * 0.001);
     mat4.rotateY(oCube.modelMatrix, oCube.modelMatrix, time * 0.001);
+
+    mat4.translate(oTorus.modelMatrix, mat4.create(), [1.2, 1.0, 0.0]);
+    // mat4.rotateX(oTorus.modelMatrix, oTorus.modelMatrix, time * 0.001);
+    mat4.rotateY(oTorus.modelMatrix, oTorus.modelMatrix, time * 0.001);
+    // mat4.rotateZ(oTorus.modelMatrix, oTorus.modelMatrix, time * 0.001);
+
+    mat4.copy(oSphere.modelMatrix,oTorus.modelMatrix);
+    mat4.translate(oSphere.modelMatrix, oSphere.modelMatrix, [-0.6*Math.sqrt(2), 0.0, 0.0]);
+    mat4.rotate(oSphere.modelMatrix, oSphere.modelMatrix, time * 0.005, [1, 1, 0]);
+    mat4.translate(oSphere.modelMatrix, oSphere.modelMatrix, [0.6*Math.sqrt(2), 0.0, 0.0]);
+
+    mat4.translate(oCylinder.modelMatrix, mat4.create(), [0.0, 3.0, -3.0]);
+    mat4.translate(oCylinder.modelMatrix, oCylinder.modelMatrix, [3.0*Math.sin(0.0025*time), 1.2*Math.sin(0.005* time), 0.0]);
+    mat4.rotateX(oCylinder.modelMatrix, oCylinder.modelMatrix, glMatrix.glMatrix.toRadian(135));
+
+    mat4.copy(oCone.modelMatrix, oCylinder.modelMatrix);
+    mat4.translate(oCone.modelMatrix, oCone.modelMatrix, [0.0, 0.0, -1.5]);
+    mat4.rotateX(oCone.modelMatrix, oCone.modelMatrix, glMatrix.glMatrix.toRadian(180));
+
+    mat4.copy(oRing.modelMatrix, oCylinder.modelMatrix);
+    mat4.translate(oRing.modelMatrix, oRing.modelMatrix, [0.0, 0.0, -1.125]);
+    mat4.rotateZ(oRing.modelMatrix, oRing.modelMatrix, time * 0.01);
+    mat4.rotateY(oRing.modelMatrix, oRing.modelMatrix, glMatrix.glMatrix.toRadian(90));
 
 }
 
