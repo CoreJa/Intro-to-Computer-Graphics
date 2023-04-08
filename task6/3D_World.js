@@ -41,23 +41,7 @@ function createProgram(gl, vertexShader, fragmentShader) {
 
 /**
 Initializes the WebGL rendering context and creates vertex and fragment shaders.
-@returns {{
-    gl: WebGLRenderingContext, 
-    programInfo: {
-        program: WebGLProgram,
-        attribLocations: {
-            vertexPosition: number, 
-            vertexNormal: number, 
-            vertexColor: number 
-        },uniformLocations: { 
-            projectionMatrix: WebGLUniformLocation,
-            modelMatrix: WebGLUniformLocation,
-            viewMatrix: WebGLUniformLocation,
-            ambientLightColor: WebGLUniformLocation,
-            diffuseLightColor: WebGLUniformLocation,
-            lightDirection: WebGLUniformLocation 
-        }}
-}} Object containing the WebGLRenderingContext and program information.
+Object containing the WebGLRenderingContext and program information.
 */
 async function initWebGL() {
     // Get canvas from DOM and create WebGLRenderingContext
@@ -225,37 +209,11 @@ function handleKey(camera) {
 function modelMatrixAnimation(objects, time) {
     let [oFloor, oLight, oCube, oTorus, oSphere, oCylinder, oCone, oRing]=objects;
 
-    const lightX = parseFloat(document.getElementById('light-x').value);
-    const lightY = parseFloat(document.getElementById('light-y').value);
-    const lightZ = parseFloat(document.getElementById('light-z').value);
     mat4.translate(oLight.modelMatrix, mat4.create(), [lightX, lightY, lightZ]);
 
-    mat4.translate(oCube.modelMatrix, mat4.create(), [-0.8, 1.0, 0.0]);
+    mat4.translate(oCube.modelMatrix, mat4.create(), [0.0, 1.0, 0.0]);
     mat4.rotateX(oCube.modelMatrix, oCube.modelMatrix, time * 0.001);
     mat4.rotateY(oCube.modelMatrix, oCube.modelMatrix, time * 0.001);
-
-    mat4.translate(oTorus.modelMatrix, mat4.create(), [1.2, 1.0, 0.0]);
-    // mat4.rotateX(oTorus.modelMatrix, oTorus.modelMatrix, time * 0.001);
-    mat4.rotateY(oTorus.modelMatrix, oTorus.modelMatrix, time * 0.001);
-    // mat4.rotateZ(oTorus.modelMatrix, oTorus.modelMatrix, time * 0.001);
-
-    mat4.copy(oSphere.modelMatrix,oTorus.modelMatrix);
-    mat4.translate(oSphere.modelMatrix, oSphere.modelMatrix, [-0.6*Math.sqrt(2), 0.0, 0.0]);
-    mat4.rotate(oSphere.modelMatrix, oSphere.modelMatrix, time * 0.005, [1, 1, 0]);
-    mat4.translate(oSphere.modelMatrix, oSphere.modelMatrix, [0.6*Math.sqrt(2), 0.0, 0.0]);
-
-    mat4.translate(oCylinder.modelMatrix, mat4.create(), [0.0, 3.0, -3.0]);
-    mat4.translate(oCylinder.modelMatrix, oCylinder.modelMatrix, [3.0*Math.sin(0.0025*time), 1.2*Math.sin(0.005* time), 0.0]);
-    mat4.rotateX(oCylinder.modelMatrix, oCylinder.modelMatrix, glMatrix.glMatrix.toRadian(135));
-
-    mat4.copy(oCone.modelMatrix, oCylinder.modelMatrix);
-    mat4.translate(oCone.modelMatrix, oCone.modelMatrix, [0.0, 0.0, -1.5]);
-    mat4.rotateX(oCone.modelMatrix, oCone.modelMatrix, glMatrix.glMatrix.toRadian(180));
-
-    mat4.copy(oRing.modelMatrix, oCylinder.modelMatrix);
-    mat4.translate(oRing.modelMatrix, oRing.modelMatrix, [0.0, 0.0, -1.125]);
-    mat4.rotateZ(oRing.modelMatrix, oRing.modelMatrix, time * 0.01);
-    mat4.rotateY(oRing.modelMatrix, oRing.modelMatrix, glMatrix.glMatrix.toRadian(90));
 
 }
 
@@ -284,7 +242,6 @@ async function main() {
         gl.depthFunc(gl.LEQUAL); // Near things obscure far things
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);// Clear the canvas before we start drawing on it.
 
-        handleKey(camera);
         coords=Array.from(document.getElementsByClassName("coord"));
         coords[0].innerHTML=camera.pos[0].toFixed(2);
         coords[1].innerHTML=camera.pos[1].toFixed(2);
@@ -292,6 +249,11 @@ async function main() {
         coords[3].innerHTML=camera.direction[0].toFixed(2);
         coords[4].innerHTML=camera.direction[1].toFixed(2);
         coords[5].innerHTML=camera.direction[2].toFixed(2);
+
+        // Set uniform values for lighting
+        gl.uniform3fv(programInfo.uniformLocations.ambientLightColor, [0.2, 0.2, 0.2]);
+        gl.uniform3fv(programInfo.uniformLocations.diffuseLightColor, [1, 1, 1]);
+        gl.uniform3fv(programInfo.uniformLocations.lightDirection, [lightX, lightY, lightZ]);
 
         // set up projection Matrix
         const projectionMatrix = mat4.create();
@@ -303,13 +265,8 @@ async function main() {
         mat4.lookAt(viewMatrix, camera.pos, vec3.add([], camera.pos, camera.direction), camera.up);
         gl.uniformMatrix4fv(programInfo.uniformLocations.viewMatrix, false, viewMatrix);
 
-        // Set uniform values for matrices and lighting
-        const lightX = parseFloat(document.getElementById('light-x').value);
-        const lightY = parseFloat(document.getElementById('light-y').value);
-        const lightZ = parseFloat(document.getElementById('light-z').value);
-        gl.uniform3fv(programInfo.uniformLocations.ambientLightColor, [0.2, 0.2, 0.2]);
-        gl.uniform3fv(programInfo.uniformLocations.diffuseLightColor, [1, 1, 1]);
-        gl.uniform3fv(programInfo.uniformLocations.lightDirection, [lightX, lightY, lightZ]);
+        // Handle key pressed for camera movement
+        handleKey(camera);
 
         // Set model matrix for each object
         modelMatrixAnimation(objects, time);
@@ -332,6 +289,10 @@ async function main() {
 var pressedKeySet = new Set();
 const mat4=glMatrix.mat4;
 const vec3=glMatrix.vec3;
+
+const lightX = parseFloat(document.getElementById('light-x').value);
+const lightY = parseFloat(document.getElementById('light-y').value);
+const lightZ = parseFloat(document.getElementById('light-z').value);
 
 //event listeners
 document.addEventListener('keydown', (event) => {pressedKeySet.add(event.code);});
