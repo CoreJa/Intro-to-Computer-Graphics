@@ -277,6 +277,9 @@ async function main() {
         coords[5].innerHTML=camera.direction[2].toFixed(2);
 
         // Set uniform values for lighting
+        const lightX = parseFloat(document.getElementById('light-x').value);
+        const lightY = parseFloat(document.getElementById('light-y').value);
+        const lightZ = parseFloat(document.getElementById('light-z').value);
         gl.uniform3fv(programInfo.uniformLocations.ambientLightColor, [0.2, 0.2, 0.2]);
         gl.uniform3fv(programInfo.uniformLocations.diffuseLightColor, [1, 1, 1]);
         gl.uniform3fv(programInfo.uniformLocations.lightDirection, [lightX, lightY, lightZ]);
@@ -315,10 +318,6 @@ async function main() {
 var pressedKeySet = new Set();
 const mat4=glMatrix.mat4;
 const vec3=glMatrix.vec3;
-
-const lightX = parseFloat(document.getElementById('light-x').value);
-const lightY = parseFloat(document.getElementById('light-y').value);
-const lightZ = parseFloat(document.getElementById('light-z').value);
 
 //event listeners
 document.addEventListener('keydown', (event) => {pressedKeySet.add(event.code);});
