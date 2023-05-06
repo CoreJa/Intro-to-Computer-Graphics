@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Crate in 3D World</title>
+  <style>
+    .flex-line{
+      display: flex;
+      align-content: space-between;
+      justify-content: space-between;
+      align-items: center;
+      gap: 5px;
+    }
+    .container{
+      display: flex;
+      justify-content: flex-start;
+      gap: 20px;
+    }
+    fieldset {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .camera {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+    }
+    .text {
+      width: 36px;
+      text-align: right;
+    }
+    ul {
+      padding-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="800" height="600"></canvas>
+  <div class="container">
+    <fieldset>
+      <legend>Light Position</legend>
+      <div class="flex-line">X: <input id="light-x" type="range" max="5" min="-5" step="0.01" value="1.5"><span class="text">N/A</span></div>
+      <div class="flex-line">Y: <input id="light-y" type="range" max="5" min="-5" step="0.01" value="3.5"><span class="text">N/A</span></div>
+      <div class="flex-line">Z: <input id="light-z" type="range" max="5" min="-5" step="0.01" value="1.2"><span class="text">N/A</span></div>
+    </fieldset>
+    <fieldset class="camera">
+      <legend>Camera Specs</legend>
+      <fieldset>
+        <legend>Position</legend>
+        <div class="flex-line">X: <span class="coord">N/A</span></div>
+        <div class="flex-line">Y: <span class="coord">N/A</span></div>
+        <div class="flex-line">Z: <span class="coord">N/A</span></div>
+      </fieldset>
+      <fieldset>
+        <legend>Direction</legend>
+        <div class="flex-line">X: <span class="coord">N/A</span></div>
+        <div class="flex-line">Y: <span class="coord">N/A</span></div>
+        <div class="flex-line">Z: <span class="coord">N/A</span></div>
+      </fieldset>
+    </fieldset>
+    <fieldset>
+      <legend>Operations:</legend>
+      <ul>
+        <li>Use "W" "A" "S" "D" "I" "K" to adjust camera positions.</li>
+        <li>Use "J" "L" to adjust camera angle.</li>
+        <li>Use sliders on the left to control the position of SUN.</li>
+        <li>Hold "Shift" to speed up!</li>
+      </ul>
+    </fieldset>
+</div>
+  <script src="./js/gl-matrix-min.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
