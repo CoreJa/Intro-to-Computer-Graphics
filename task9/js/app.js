@@ -345,6 +345,7 @@ async function main() {
             for (const mesh of model.meshes) {
                 blocklist=new Set([
                     "Plane.031", "Plane.032","Plane.033","Plane.034","Plane.035","Plane.036",
+                    "Cube",
                     // 'Circle.005', 
                 ])
                 if (blocklist.has(mesh.name)){
