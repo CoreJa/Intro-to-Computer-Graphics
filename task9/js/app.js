@@ -56,6 +56,7 @@ async function initWebGL() {
         attribLocations:{
             vertexPosition: gl.getAttribLocation(program, "a_position"),
             vertexNormal: gl.getAttribLocation(program, "a_normal"),
+            vertexColor: gl.getAttribLocation(program, "a_color"),
             vertexTextureCoord: gl.getAttribLocation(program, "a_texCoord"),
         },
         uniformLocations:{
@@ -82,12 +83,17 @@ class Model{
         this.json=await (await fetch(this.url)).json();
         this.meshes=[];
         for (const mesh of this.json.meshes){
+            const textureURL= this.json.materials[mesh.materialindex].properties.find(x=>x.key === '$tex.file');
+            const color = [...this.json.materials[mesh.materialindex].properties.find(x=>x.key === '$clr.diffuse').value, 1];
+
             this.meshes.push({
+                name: mesh.name,
                 vertexPositions: mesh.vertices,
                 vertexNormals: mesh.normals,
                 vertexTextureCoords: mesh.texturecoords[0],
+                vertexColors: textureURL ? Array(mesh.vertices.length/3*4).fill(0) : Array(mesh.vertices.length/3).fill(color).flat(1),
                 indices: mesh.faces.flat(1),
-                texture: this.loadTexture(this.name+ "/" + this.json.materials[mesh.materialindex].properties.find(x=>x.key === '$tex.file').value.split(/[\/\\]/).pop()),
+                texture: textureURL ? this.loadTexture(this.name+ "/" + textureURL.value.split(/[\/\\]/).pop()): null,
                 modelMatrix: mat4.create(),
             });
         }
@@ -131,8 +137,12 @@ async function initModels(){
     var models=[];
     const modelFiles=[
         // "winter.json",
-        "camping.json",
-        "windmill.json",
+        // "camping.json",
+        // "windmill.json",
+        // "puzzle.json",
+        // "chess.json",
+        "camp.json",
+        "fire.json",
     ];
     for (const modelFile of modelFiles){
         const model = new Model(modelFile);
@@ -149,6 +159,7 @@ function initBuffers(programInfo, models){
     var indices=[];
     var vertexNormals=[];
     var vertexPositions=[];
+    var vertexColors=[];
     var vertexTextureCoords=[];
 
     //combine vertex positions, vertex normals, and indices
@@ -158,6 +169,7 @@ function initBuffers(programInfo, models){
             indices.push(mesh.indices.map(idx=>idx+vertexCount));
             vertexNormals.push(mesh.vertexNormals);
             vertexPositions.push(mesh.vertexPositions);
+            vertexColors.push(mesh.vertexColors);
             vertexTextureCoords.push(mesh.vertexTextureCoords);
             vertexCount+=mesh.vertexPositions.length/3;
         }
@@ -165,6 +177,7 @@ function initBuffers(programInfo, models){
     indices=new Uint16Array(indices.flat(1));
     vertexNormals=new Float32Array(vertexNormals.flat(1));
     vertexPositions=new Float32Array(vertexPositions.flat(1));
+    vertexColors=new Float32Array(vertexColors.flat(1));
     vertexTextureCoords=new Float32Array(vertexTextureCoords.flat(1));
 
     //Create and bind vertex positions buffer, vertex normals buffer, and indices buffer
@@ -183,6 +196,11 @@ function initBuffers(programInfo, models){
     gl.bufferData(gl.ARRAY_BUFFER, vertexTextureCoords, gl.STATIC_DRAW);
     gl.vertexAttribPointer(programInfo.attribLocations.vertexTextureCoord, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexTextureCoord);
+    const colorBuffer=gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertexColors, gl.STATIC_DRAW);
+    gl.vertexAttribPointer(programInfo.attribLocations.vertexColor, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
     const indicesBuffer=gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
@@ -233,10 +251,10 @@ function handleKey(camera) {
 
 
 function modelMatrixAnimation(models, time) {
-    // let [oCube]=models;
+    // models[0].modelMatrix = mat4.scale([], models[0].modelMatrix, [0.5, 0.5, 0.5]);
 
 
-    // mat4.translate(oCube.modelMatrix, mat4.create(), [0.0, 1.5, 0.0]);
+    // mat4.translate(oCube.modelMatrixtex.file, mat4.create(), [0.0, 1.5, 0.0]);
     // mat4.rotateX(oCube.modelMatrix, oCube.modelMatrix, time * 0.001);
     // mat4.rotateY(oCube.modelMatrix, oCube.modelMatrix, time * 0.001);
     // mat4.rotateZ(oCube.modelMatrix, oCube.modelMatrix, time * 0.001);
@@ -277,6 +295,11 @@ async function main() {
         up: [0, 1, 0],
     }
 
+    models[0].modelMatrix=mat4.scale([], models[0].modelMatrix, [0.002, 0.002, 0.002]);
+
+    mat4.translate(models[1].modelMatrix, models[1].modelMatrix, [-0.15, 0.4, 0.35]);
+    mat4.scale(models[1].modelMatrix, models[1].modelMatrix, [0.015, 0.015, 0.015]);
+
 
     // Set up render function
     function render(time) {
@@ -308,7 +331,7 @@ async function main() {
         const lightX = parseFloat(document.getElementById('light-x').value);
         const lightY = parseFloat(document.getElementById('light-y').value);
         const lightZ = parseFloat(document.getElementById('light-z').value);
-        gl.uniform3fv(programInfo.uniformLocations.ambientLightColor, [0.3, 0.3, 0.3]);
+        gl.uniform3fv(programInfo.uniformLocations.ambientLightColor, [0.5, 0.5, 0.5]);
         gl.uniform3fv(programInfo.uniformLocations.diffuseLightColor, [1, 1, 1]);
         gl.uniform3fv(programInfo.uniformLocations.lightDirection, [lightX, lightY, lightZ]);
 
@@ -320,14 +343,25 @@ async function main() {
         var indices_offset=0;
         for (const model of models) {
             for (const mesh of model.meshes) {
-                const localMatrix = mat4.mul([], mesh.modelMatrix, model.modelMatrix);
+                blocklist=new Set([
+                    "Plane.031", "Plane.032","Plane.033","Plane.034","Plane.035","Plane.036",
+                    // 'Circle.005', 
+                ])
+                if (blocklist.has(mesh.name)){
+                    indices_offset+=mesh.indices.length*2;
+                    continue;
+                }
+                const localMatrix = mat4.mul([], model.modelMatrix, mesh.modelMatrix);
                 gl.uniformMatrix4fv(programInfo.uniformLocations.modelMatrix, false, localMatrix);
                 gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix, false, mat4.transpose([], mat4.invert([], localMatrix)));
-    
+
+                if(mesh.texture!==null){
                 gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(gl.TEXTURE_2D, mesh.texture);
                 gl.uniform1i(programInfo.uniformLocations.texture, 0);
-    
+                }else{
+                    gl.bindTexture(gl.TEXTURE_2D, null);
+                }
                 gl.drawElements(gl.TRIANGLES, mesh.indices.length, gl.UNSIGNED_SHORT, indices_offset);
                 indices_offset+=mesh.indices.length*2;
             }
