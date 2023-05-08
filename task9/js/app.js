@@ -1,32 +1,18 @@
-import {gl, programInfo} from "./webGL.js";
+import {gl, programInfo, initWebGL} from "./webGL.js";
 import {initModels} from "./model.js";
 import {camera, handleKey} from "./camera.js";
-
-const mat4=glMatrix.mat4;
-const vec3=glMatrix.vec3;
+import {mat4, vec3, vec2} from "./utils.js";
 
 async function main() {
-    var models = await initModels();
+    var canvas = document.querySelector("#c");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight-145;
+    // Initialize WebGL
+    await initWebGL();
     console.log("Models initialized");
-    // console.log("Buffers initialized");
-
-    gl.useProgram(programInfo.program);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    var models = await initModels();
+    console.log("Buffers initialized");
     
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    gl.blendEquation(gl.FUNC_ADD);
-    gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);
-    // gl.sampleCoverage(0.5, false);
-
-    gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LEQUAL);
-    gl.depthMask(true);
-    gl.depthRange(0.0, 1.0);
-
-
-
     // Set up render function
     function render(time) {
         // Clear the canvas, set up depth testing, create projection and view matrices
@@ -47,19 +33,21 @@ async function main() {
         gl.uniformMatrix4fv(programInfo.uniformLocations.viewMatrix, false, viewMatrix);
 
         // Set uniform values for matrices and lighting
-        const lightX = parseFloat(document.getElementById('light-x').value);
-        const lightY = parseFloat(document.getElementById('light-y').value);
-        const lightZ = parseFloat(document.getElementById('light-z').value);
-        gl.uniform3fv(programInfo.uniformLocations.ambientLightColor, [0.5, 0.5, 0.5]);
+        const lightDirection = parseFloat(document.getElementById('light-direction').value);
+        gl.uniform3fv(programInfo.uniformLocations.ambientLightColor, [0.3, 0.3, 0.3]);
         gl.uniform3fv(programInfo.uniformLocations.diffuseLightColor, [1, 1, 1]);
-        gl.uniform3fv(programInfo.uniformLocations.lightDirection, [lightX, lightY, lightZ]);
+        var [y,z]= vec2.rotate([], [10, 0], [0, 0], glMatrix.glMatrix.toRadian(-lightDirection))
+
+        gl.uniform3fv(programInfo.uniformLocations.lightDirection, [0,y,z]);
 
         // Draw models
         for (const model of models) {
-            model.traverseThenDraw();
+            model.traverseThenDraw(time);
         }
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
 }
+
 main();
+export {main};

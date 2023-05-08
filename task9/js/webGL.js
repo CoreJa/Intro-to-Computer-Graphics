@@ -7,8 +7,12 @@ Creates a shader object from given source code and compiles it.
 
 /**@type {WebGL2RenderingContext}*/
 const gl = document.querySelector("#c").getContext("webgl2");
-const programInfo = await initWebGL();
-
+let programInfo;
+// Enable anisotropic filtering extension
+const ext = gl.getExtension("EXT_texture_filter_anisotropic");
+if (!ext) {
+    console.error("Anisotropic filtering is not supported in your browser.");
+}
 function createShader(type, source) {
     let shader = gl.createShader(type);
     gl.shaderSource(shader, source);
@@ -55,7 +59,7 @@ async function initWebGL() {
     let program = createProgram(vertexShader, fragmentShader);
 
     //Use a dict to record all init location info and color info, and model view matrix 
-    return {
+    programInfo = {
         program: program,
         attribLocations:{
             vertexPosition: gl.getAttribLocation(program, "a_position"),
@@ -74,6 +78,22 @@ async function initWebGL() {
             lightDirection: gl.getUniformLocation(program, "u_lightDirection"),
         },
     }
+
+    // Set up WebGL
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.useProgram(programInfo.program);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.blendEquation(gl.FUNC_ADD);
+    gl.enable(gl.SAMPLE_ALPHA_TO_COVERAGE);
+    gl.sampleCoverage(0.5, false);
+    
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+    gl.depthMask(true);
+    gl.depthRange(0.0, 1.0);
 }
 
-export {gl, programInfo};
+export {gl, programInfo, initWebGL, ext};

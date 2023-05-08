@@ -1,6 +1,6 @@
-const vec3=glMatrix.vec3;
+import{vec3, toRadian} from "./utils.js";
 var camera={
-    pos: [0, 2.5, 10], 
+    pos: [0, 2.5, 12], 
     direction: [0, 0, -1], 
     up: [0, 1, 0],
 }
@@ -39,15 +39,15 @@ function handleKey(camera) {
         vec3.scaleAndAdd(camera.pos, camera.pos, camera.up, movePace);
     }
     if(pressedKeySet.has("KeyK")){
-        if(camera.pos[1]>0.11){
+        // if(camera.pos[1]>0.11){
             vec3.scaleAndAdd(camera.pos, camera.pos, camera.up, -movePace);
-        }
+        // }
     }
     if(pressedKeySet.has("KeyJ")){
-        vec3.rotateY(camera.direction, camera.direction, [0, 0, 0], glMatrix.glMatrix.toRadian(rotatePace));
+        vec3.rotateY(camera.direction, camera.direction, [0, 0, 0], toRadian(rotatePace));
     }
     if(pressedKeySet.has("KeyL")){
-        vec3.rotateY(camera.direction, camera.direction, [0, 0, 0], glMatrix.glMatrix.toRadian(-rotatePace));
+        vec3.rotateY(camera.direction, camera.direction, [0, 0, 0], toRadian(-rotatePace));
     }
     var coords=Array.from(document.getElementsByClassName("coord"));
     coords[0].innerHTML=camera.pos[0].toFixed(2);
