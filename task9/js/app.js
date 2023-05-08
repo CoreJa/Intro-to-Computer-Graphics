@@ -34,7 +34,7 @@ async function main() {
 
         // Set uniform values for matrices and lighting
         const lightDirection = parseFloat(document.getElementById('light-direction').value);
-        gl.uniform3fv(programInfo.uniformLocations.ambientLightColor, [0.3, 0.3, 0.3]);
+        gl.uniform3fv(programInfo.uniformLocations.ambientLightColor, [0.4, 0.4, 0.4]);
         gl.uniform3fv(programInfo.uniformLocations.diffuseLightColor, [1, 1, 1]);
         var [y,z]= vec2.rotate([], [10, 0], [0, 0], glMatrix.glMatrix.toRadian(-lightDirection))
 

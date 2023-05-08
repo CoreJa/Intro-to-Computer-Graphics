@@ -1,7 +1,7 @@
 import{vec3, toRadian} from "./utils.js";
 var camera={
     pos: [0, 2.5, 12], 
-    direction: [0, 0, -1], 
+    direction: [0, 0, 1], 
     up: [0, 1, 0],
 }
 //glabal variables

@@ -182,33 +182,38 @@ async function initModels(){
         "fire.json",
         "chess.json",
         "puzzle.json",
-        // "book.json",
-        // "windmill.json",
+        "ship.json",
+        "cube.json",
+        "windmill.json",
     ];
     for (const modelFile of modelFiles){
         const model = new Model(modelFile);
         await model.load();
-        console.log(model);
+        // console.log(model);
         for (const mesh of model.meshes){
             mesh.vao=model.bindMeshBuffers(mesh);
         }
         models.push(model);
     }
     
-    models[0].blocklist=new Set(...models[0].blocklist, new Set(["Plane.031","Plane.032","Plane.033","Plane.034","Plane.035","Plane.036",]));
-    mat4.fromRotationTranslationScale(models[0].modelMatrix, [0, 0, 0, 1], [0.0, 0.0, 0.0], [0.006, 0.006, 0.006]);
+    models[0].blocklist=new Set(...models[0].blocklist, new Set([
+        "Plane.031","Plane.032","Plane.033","Plane.034","Plane.035","Plane.036",
+        'Circle.002','Plane.026','Circle.021','Plane.006','PM3D_Sphere3D1.001',
+    ]));
+    mat4.fromRotationTranslationScale(models[0].modelMatrix, quat.fromEuler([], 0, 0, 0), [0.0, 0.0, 0.0], [0.006, 0.006, 0.006]);
     
-    mat4.fromRotationTranslationScale(models[1].modelMatrix, [0, 0, 0, 1], [-0.4, 1.6, 1.2], [0.03, 0.03, 0.03]);
+    mat4.fromRotationTranslationScale(models[1].modelMatrix, quat.fromEuler([], 0, 0, 0), [-0.4, 1.6, 1.2], [0.03, 0.03, 0.03]);
     
-    mat4.fromRotationTranslationScale(models[2].modelMatrix, [0, 0, 0, 1], [-2.0, -0.15, 1.7], [0.002, 0.002, 0.002]);
+    mat4.fromRotationTranslationScale(models[2].modelMatrix, quat.fromEuler([], 0, 180, 0), [-2.0, -0.15, 1.7], [0.002, 0.002, 0.002]);
 
-    // models[3].blockChannels=new Set(["Animated Camera 1"]);
-    mat4.fromRotationTranslationScale(models[3].modelMatrix, quat.fromEuler([], 270, 180, 0), [0, 1.2, 5], [15, 15, 15]);
+    mat4.fromRotationTranslationScale(models[3].modelMatrix, quat.fromEuler([], 270, 0, 0), [-4, 2, 3], [15, 15, 15]);
 
-    // mat4.fromRotationTranslationScale(models[4].modelMatrix, quat.fromEuler([], 270, 180, 0), [0, 1.2, 5], [15, 15, 15]);
-    // mat4.fromRotationTranslationScale(models[4].modelMatrix, [0, 0, 0, 1], [0,0,50], [0.2, 0.2, 0.2]);
+    mat4.fromRotationTranslationScale(models[4].modelMatrix, quat.fromEuler([], 270, 210, 0), [7.2, -0.4, 1.5], [1.0, 1.0, 1.0]);
 
-    // models[4].blockChannels=new Set(["joint3"]);
+    mat4.fromRotationTranslationScale(models[5].modelMatrix, quat.fromEuler([],0, 0, 0), [0.8, 0, 3], [0.08, 0.08, 0.08]);
+
+    mat4.fromRotationTranslationScale(models[6].modelMatrix, quat.fromEuler([], 0, 90, 0), [0, 0, 20], [1, 1, 1]);
+
     return models;
 }
 export {initModels};
