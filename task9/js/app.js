@@ -1,17 +1,66 @@
 import {gl, programInfo, initWebGL} from "./webGL.js";
-import {initModels} from "./model.js";
+import {Model} from "./model.js";
 import {camera, handleKey} from "./camera.js";
-import {mat4, vec3, vec2} from "./utils.js";
+import {mat4, vec3, vec2, quat} from "./utils.js";
+
+var models=[];
+
+async function initModels(){
+    const modelFiles=[
+        "camp.json",
+        "fire.json",
+        "chess.json",
+        "puzzle.json",
+        "ship.json",
+        "cube.json",
+        "windmill.json",
+    ];
+    for (const modelFile of modelFiles){
+        const model = new Model(modelFile);
+        await model.load();
+        // console.log(model);
+        for (const mesh of model.meshes){
+            mesh.vao=model.bindMeshBuffers(mesh);
+        }
+        models.push(model);
+    }
+}
+
+function adjustModels(){
+    models[0].blocklist=new Set(...models[0].blocklist, new Set([
+        "Plane.031","Plane.032","Plane.033","Plane.034","Plane.035","Plane.036",
+        'Circle.002','Plane.026','Circle.021','Plane.006','PM3D_Sphere3D1.001',
+    ]));
+    mat4.fromRotationTranslationScale(models[0].modelMatrix, quat.fromEuler([], 0, 0, 0), [0.0, 0.0, 0.0], [0.006, 0.006, 0.006]);
+    mat4.fromRotationTranslationScale(models[1].modelMatrix, quat.fromEuler([], 0, 0, 0), [-0.4, 1.6, 1.2], [0.03, 0.03, 0.03]);
+    mat4.fromRotationTranslationScale(models[2].modelMatrix, quat.fromEuler([], 0, 180, 0), [-2.0, -0.15, 1.7], [0.002, 0.002, 0.002]);
+    mat4.fromRotationTranslationScale(models[3].modelMatrix, quat.fromEuler([], 270, 0, 0), [-4, 2, 3], [15, 15, 15]);
+    mat4.fromRotationTranslationScale(models[4].modelMatrix, quat.fromEuler([], 270, 210, 0), [7.4, -0.4, 1.5], [1.0, 1.0, 1.0]);
+    models[4].modelAnimation = function(time){
+        return mat4.translate([], models[4].modelMatrix, [0, 0, 3 * (1 + Math.sin(time / 1000 - Math.PI / 2))]);
+    }
+    mat4.fromRotationTranslationScale(models[5].modelMatrix, quat.fromEuler([],0, 0, 0), [0.8, 0, 3], [0.08, 0.08, 0.08]);
+    mat4.fromRotationTranslationScale(models[6].modelMatrix, quat.fromEuler([], 0, 90, 0), [0, 0, 20], [1, 1, 1]);
+
+    models[2].distanceToAnimate=5;
+    models[3].distanceToAnimate=5;
+    models[4].distanceToAnimate=7.5;
+    models[5].distanceToAnimate=2.5;
+}
 
 async function main() {
     var canvas = document.querySelector("#c");
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight-145;
+    canvas.height = window.innerHeight-180;
+
     // Initialize WebGL
     await initWebGL();
     console.log("Models initialized");
-    var models = await initModels();
+    await initModels();
     console.log("Buffers initialized");
+
+    // adjust Models
+    adjustModels();
     
     // Set up render function
     function render(time) {
@@ -35,9 +84,8 @@ async function main() {
         // Set uniform values for matrices and lighting
         const lightDirection = parseFloat(document.getElementById('light-direction').value);
         gl.uniform3fv(programInfo.uniformLocations.ambientLightColor, [0.4, 0.4, 0.4]);
-        gl.uniform3fv(programInfo.uniformLocations.diffuseLightColor, [1, 1, 1]);
+        gl.uniform3fv(programInfo.uniformLocations.diffuseLightColor, [1.5, 1.5, 1.3]);
         var [y,z]= vec2.rotate([], [10, 0], [0, 0], glMatrix.glMatrix.toRadian(-lightDirection))
-
         gl.uniform3fv(programInfo.uniformLocations.lightDirection, [0,y,z]);
 
         // Draw models
@@ -50,4 +98,4 @@ async function main() {
 }
 
 main();
-export {main};
+export {main, models};

@@ -23,7 +23,7 @@ void main(){
         basicColor = v_color;
     }
     
-
+    // vec3 diffuseLightDirection = normalize(u_lightDirection);
     vec3 diffuseLightDirection = normalize(u_lightDirection - v_position);
     float diffuseLightIntensity = max(dot(v_normal, diffuseLightDirection), 0.0);
 

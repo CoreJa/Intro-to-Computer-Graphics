@@ -1,6 +1,6 @@
-import {mat4, vec3, quat, toRadian} from "./utils.js";
+import {mat4, vec3, quat, vec4} from "./utils.js";
 import {gl, programInfo, ext} from "./webGL.js";
-
+import {camera} from "./camera.js";
 
 class Model{
     constructor(url){
@@ -8,6 +8,13 @@ class Model{
         this.name = url.split(/\./)[0];
         this.blocklist = new Set();
         this.blockChannels = new Set();
+        this.playedDuration = 0;
+        this.pausedDuration = 0;
+        this.pausedTimestamp = 0;
+        this.playedTimestamp = 0;
+        this.timeLock = false;
+        this.location = vec3.create();
+        this.distanceToAnimate = 100;
     }
     async load(){
         this.json=await (await fetch(this.url)).json();
@@ -77,15 +84,30 @@ class Model{
     }
 
     traverseThenDraw(time){
-        this.traverse(this.hierarchicalTree, this.modelMatrix, time);
+        if (this.isAnimating()){
+            if(this.timeLock){
+                this.pausedDuration += this.playedTimestamp - this.pausedTimestamp;
+                this.timeLock=false;
+            }
+            this.pausedTimestamp = time;
+        } else {
+            if(!this.timeLock){
+                this.playedDuration += this.pausedTimestamp - this.playedTimestamp;
+                this.timeLock=true;
+            }
+            this.playedTimestamp = time;
+        }
+        const timeByTick= this.isAnimating() ? time  - this.pausedDuration: this.playedDuration;
+        var localMatrix = this.modelAnimation? this.modelAnimation(timeByTick) : this.modelMatrix;
+        this.traverse(this.hierarchicalTree, localMatrix, time);
 
     }
     traverse(node, parentMatrix, time){
         var currentMatrix = mat4.mul([], parentMatrix, mat4.transpose([], node.transformation));
         if (this.animation) {
             if(!this.blockChannels.has(node.name) && node.name in this.animation.channels){
-                const timeByTick = time % this.animation.duration;
-                // console.log(timeByTick, time, this.animation.duration);
+                const timeByTick= this.isAnimating() ? (time  - this.pausedDuration) % this.animation.duration : this.playedDuration % this.animation.duration;
+
                 const channel = this.animation.channels[node.name];
                 const position = interpolateKeys(channel.positionkeys, timeByTick);
                 const rotation = interpolateKeys(channel.rotationkeys, timeByTick);
@@ -106,6 +128,7 @@ class Model{
         }
     }
     draw(mesh, currentMatrix){
+        this.location = vec4.transformMat4([], [0,0,0,1], currentMatrix).slice(0,3);
         if (this.blocklist.has(mesh.name)) return;
         gl.uniformMatrix4fv(programInfo.uniformLocations.modelMatrix, false, currentMatrix);
         gl.uniformMatrix4fv(programInfo.uniformLocations.normalMatrix, false, mat4.transpose([], mat4.invert([], currentMatrix)));
@@ -118,6 +141,9 @@ class Model{
         }
         gl.bindVertexArray(mesh.vao);
         gl.drawElements(gl.TRIANGLES, mesh.indices.length, gl.UNSIGNED_SHORT, 0);
+    }
+    isAnimating(){
+        return vec3.dist(this.location, camera.pos)<=this.distanceToAnimate;
     }
 
     bindMeshBuffers(mesh){    
@@ -174,45 +200,5 @@ function interpolateKeys(keyframes, time){
     }
 }
 
-async function initModels(){
-    var models=[];
-    const modelFiles=[
-        "camp.json",
-        "fire.json",
-        "chess.json",
-        "puzzle.json",
-        "ship.json",
-        "cube.json",
-        "windmill.json",
-    ];
-    for (const modelFile of modelFiles){
-        const model = new Model(modelFile);
-        await model.load();
-        // console.log(model);
-        for (const mesh of model.meshes){
-            mesh.vao=model.bindMeshBuffers(mesh);
-        }
-        models.push(model);
-    }
-    
-    models[0].blocklist=new Set(...models[0].blocklist, new Set([
-        "Plane.031","Plane.032","Plane.033","Plane.034","Plane.035","Plane.036",
-        'Circle.002','Plane.026','Circle.021','Plane.006','PM3D_Sphere3D1.001',
-    ]));
-    mat4.fromRotationTranslationScale(models[0].modelMatrix, quat.fromEuler([], 0, 0, 0), [0.0, 0.0, 0.0], [0.006, 0.006, 0.006]);
-    
-    mat4.fromRotationTranslationScale(models[1].modelMatrix, quat.fromEuler([], 0, 0, 0), [-0.4, 1.6, 1.2], [0.03, 0.03, 0.03]);
-    
-    mat4.fromRotationTranslationScale(models[2].modelMatrix, quat.fromEuler([], 0, 180, 0), [-2.0, -0.15, 1.7], [0.002, 0.002, 0.002]);
 
-    mat4.fromRotationTranslationScale(models[3].modelMatrix, quat.fromEuler([], 270, 0, 0), [-4, 2, 3], [15, 15, 15]);
-
-    mat4.fromRotationTranslationScale(models[4].modelMatrix, quat.fromEuler([], 270, 210, 0), [7.2, -0.4, 1.5], [1.0, 1.0, 1.0]);
-
-    mat4.fromRotationTranslationScale(models[5].modelMatrix, quat.fromEuler([],0, 0, 0), [0.8, 0, 3], [0.08, 0.08, 0.08]);
-
-    mat4.fromRotationTranslationScale(models[6].modelMatrix, quat.fromEuler([], 0, 90, 0), [0, 0, 20], [1, 1, 1]);
-
-    return models;
-}
-export {initModels};
+export {Model};

@@ -3,41 +3,8 @@
 <head>
   <meta charset="utf-8">
   <title>Crate in 3D World</title>
-  <style>
-    .flex-line{
-      display: flex;
-      align-content: space-between;
-      justify-content: space-between;
-      align-items: center;
-      gap: 5px;
-    }
-    .container{
-      display: flex;
-      justify-content: flex-start;
-      gap: 20px;
-    }
-    fieldset {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .camera {
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-    }
-    .text {
-      width: 36px;
-      text-align: right;
-    }
-    ul {
-      padding-left: 10px;
-    }
-    body {
-      margin: 0;
-      padding: 0;
-    }
-  </style>
+  <link rel="stylesheet" href="./css/app.css">
+
   <script src="./js/gl-matrix-min.js"></script>
   <script src="./js/utils.js" type="module"></script>
   <script src="./js/webGL.js" type="module"></script>
@@ -49,8 +16,11 @@
   <canvas id="c" width="800" height="600"></canvas>
   <div class="container">
     <fieldset>
-      <legend>Light Position</legend>
-      <div class="flex-line">Light Direction: <input id="light-direction" type="range" max="75" min="-75" step="1" value="-45"><span class="text">N/A</span></div>
+      <legend>Options</legend>
+      <div class="flex-line">Light Direction(orbital): <input id="light-direction" type="range" max="75" min="-75" step="1" value="35"><span class="text">N/A</span></div>
+      
+      <div class="flex-line">Objects Animate without getting closer!<label class="switch"><input type="checkbox" id="animate-switch"><span class="slider round"></span></label></div>
+
     </fieldset>
     <fieldset class="camera">
       <legend>Camera Specs</legend>
@@ -74,6 +44,7 @@
         <li>Use "J" "L" to adjust camera angle.</li>
         <li>Use sliders on the left to control the position of SUN.</li>
         <li>Hold "Shift" to speed up!</li>
+        <li><b>Move closer to an Object to see its animation!</b></li>
       </ul>
     </fieldset>
 </div>
