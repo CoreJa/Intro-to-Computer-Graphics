@@ -2,9 +2,19 @@ import {gl, programInfo, initWebGL} from "./webGL.js";
 import {Model} from "./model.js";
 import {camera, handleKey} from "./camera.js";
 import {mat4, vec3, vec2, quat} from "./utils.js";
+/**
+ * The main module for the webGL application.
+ * @module app 
+ */
 
+/**An array of model files to load. 
+ * @type {Array.} 
+ */
 var models=[];
-
+/**
+ * Initializes the models by loading them from the given files and binding their mesh buffers.
+ * @async 
+ */
 async function initModels(){
     const modelFiles=[
         "camp.json",
@@ -25,7 +35,9 @@ async function initModels(){
         models.push(model);
     }
 }
-
+/**
+ * Sets up the positioning of the models in the scene. 
+ */ 
 function adjustModels(){
     models[0].blocklist=new Set(...models[0].blocklist, new Set([
         "Plane.031","Plane.032","Plane.033","Plane.034","Plane.035","Plane.036",
@@ -48,6 +60,10 @@ function adjustModels(){
     models[5].distanceToAnimate=2.5;
 }
 
+/**
+ * The main function that initializes WebGL, the models, and begins rendering the scene.
+ * @async 
+ */
 async function main() {
     var canvas = document.querySelector("#c");
     canvas.width = window.innerWidth;

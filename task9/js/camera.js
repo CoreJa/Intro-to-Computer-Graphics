@@ -1,4 +1,16 @@
 import{vec3, toRadian} from "./utils.js";
+
+/**
+ * The camera object that stores its position, direction, and up vectors.
+ * @typedef {Object} Camera
+ * @property {Array<number>} pos - The current camera position as an array of three numbers [x, y, z].
+ * @property {Array<number>} direction - The direction that the camera is pointing as an array of three numbers [x, y, z].
+ * @property {Array<number>} up - The up vector of the camera as an array of three numbers [x, y, z].
+ */
+
+/** The camera object.
+* @type {Camera} 
+*/
 var camera={
     pos: [0, 2.5, 12], 
     direction: [0, 0, -1], 
@@ -11,11 +23,10 @@ document.addEventListener('keydown', (event) => {pressedKeySet.add(event.code);}
 document.addEventListener('keyup', (event) => {pressedKeySet.delete(event.code);});
 
 /**
-Handles keyboard input to control the camera's position and rotation.
-@param {Array<number>} camera.pos - The current camera position as an array of three numbers [x, y, z].
-@param {number} cameraRot - The current camera rotation in degrees.
-@returns {{camera.pos: Array<number>, cameraRot: number}} - An object containing the updated camera position and rotation.
-*/
+ * Handles keyboard input to control the camera's position and rotation.
+ * @function
+ * @param {Camera} camera - The camera object.
+ */
 function handleKey(camera) {
     var movePace=0.04;
     var rotatePace=1;

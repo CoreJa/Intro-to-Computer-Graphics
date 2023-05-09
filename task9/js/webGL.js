@@ -1,18 +1,27 @@
 /**
-Creates a shader object from given source code and compiles it.
-@param {number} type - The type of shader (VERTEX_SHADER or FRAGMENT_SHADER).
-@param {string} source - The source code of the shader.
-@returns {WebGLShader} The compiled shader object.
-*/
+ * Creates a shader object from given source code and compiles it.
+ * @function
+ * @param {number} type - The type of shader (VERTEX_SHADER or FRAGMENT_SHADER).
+ * @param {string} source - The source code of the shader.
+ * @returns {WebGLShader} The compiled shader object.
+ */
 
 /**@type {WebGL2RenderingContext}*/
 const gl = document.querySelector("#c").getContext("webgl2");
 let programInfo;
+
 // Enable anisotropic filtering extension
 const ext = gl.getExtension("EXT_texture_filter_anisotropic");
 if (!ext) {
     console.error("Anisotropic filtering is not supported in your browser.");
 }
+/**
+ * Creates and compiles a shader object.
+ * @function
+ * @param {number} type - The type of shader (VERTEX_SHADER or FRAGMENT_SHADER).
+ * @param {string} source - The source code of the shader.
+ * @returns {WebGLShader} The compiled shader object.
+ */
 function createShader(type, source) {
     let shader = gl.createShader(type);
     gl.shaderSource(shader, source);
@@ -26,11 +35,12 @@ function createShader(type, source) {
 }
 
 /**
-Links vertex and fragment shaders into a program object.
-@param {WebGLShader} vertexShader - The compiled vertex shader object.
-@param {WebGLShader} fragmentShader - The compiled fragment shader object.
-@returns {WebGLProgram} The linked program object.
-*/
+ * Links vertex and fragment shaders into a program object.
+ * @function
+ * @param {WebGLShader} vertexShader - The compiled vertex shader object.
+ * @param {WebGLShader} fragmentShader - The compiled fragment shader object.
+ * @returns {WebGLProgram} The linked program object.
+ */
 function createProgram(vertexShader, fragmentShader) {
     let program = gl.createProgram();
     gl.attachShader(program, vertexShader);
@@ -46,9 +56,11 @@ function createProgram(vertexShader, fragmentShader) {
 
 
 /**
-Initializes the WebGL rendering context and creates vertex and fragment shaders.
-Object containing the WebGLRenderingContext and program information.
-*/
+ * Initializes the WebGL rendering context and creates vertex and fragment shaders.
+ * @async
+ * @function
+ * @returns {Promise} - A promise resolving to an object containing the WebGLRenderingContext and program information.
+ */
 async function initWebGL() {
     // Create and compile vertex and fragment shaders
     let vertexShaderSrc = await (await fetch("./glsl/shader.vert")).text();

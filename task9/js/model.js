@@ -2,6 +2,13 @@ import {mat4, vec3, quat, vec4} from "./utils.js";
 import {gl, programInfo, ext} from "./webGL.js";
 import {camera} from "./camera.js";
 
+/**
+ * Model class to manage loading and rendering of 3D models.
+ * @class / class Model{ /*
+ * Constructor for Model class.
+ * @constructor
+ * @param {string} url - The file path of the 3D model to be loaded. 
+ */
 class Model{
     constructor(url){
         this.url = "model/"+url;
@@ -16,6 +23,11 @@ class Model{
         this.location = vec3.create();
         this.distanceToAnimate = 100;
     }
+    /**
+     * Loads the 3D model file and creates necessary buffers and textures.
+     * @async
+     * @function 
+     */
     async load(){
         this.json=await (await fetch(this.url)).json();
 
@@ -61,6 +73,12 @@ class Model{
         }
 
     }
+    /**
+     * Loads a texture to be applied to a mesh.
+     * @function
+     * @param {string} tex_url - The file path of the texture to be loaded.
+     * @returns {WebGLTexture} - The texture object. 
+     */
     loadTexture(tex_url) {
         const texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -82,7 +100,11 @@ class Model{
         image.src = "texture/" + tex_url;
         return texture;
     }
-
+    /**
+     * Recursively traverses the hierarchical tree of the 3D model and draws each mesh.
+     * @function
+     * @param {number} time - The current time in milliseconds. 
+     */
     traverseThenDraw(time){
         if (this.isAnimating()){
             if(this.timeLock){
@@ -102,6 +124,13 @@ class Model{
         this.traverse(this.hierarchicalTree, localMatrix, time);
 
     }
+    /**
+     * Recursively traverses the hierarchical tree of the 3D model.
+     * @function
+     * @param {object} node - The current node being traversed.
+     * @param {mat4} parentMatrix - The previous matrix transformation applied to the parent node.
+     * @param {number} time - The current time in milliseconds. 
+     */
     traverse(node, parentMatrix, time){
         var currentMatrix = mat4.mul([], parentMatrix, mat4.transpose([], node.transformation));
         if (this.animation) {
@@ -127,6 +156,12 @@ class Model{
             }
         }
     }
+    /**
+     * Draws a mesh of the 3D model.
+     * @function
+     * @param {object} mesh - The mesh object to be drawn.
+     * @param {mat4} currentMatrix - The current matrix transformation to be applied to the mesh. 
+     */ 
     draw(mesh, currentMatrix){
         this.location = vec4.transformMat4([], [0,0,0,1], currentMatrix).slice(0,3);
         if (this.blocklist.has(mesh.name)) return;
@@ -142,10 +177,20 @@ class Model{
         gl.bindVertexArray(mesh.vao);
         gl.drawElements(gl.TRIANGLES, mesh.indices.length, gl.UNSIGNED_SHORT, 0);
     }
+    /**
+     * Determines if the 3D model should be animated based on its distance from the camera.
+     * @function
+     * @returns {boolean} - True if the model should be animated, false otherwise. 
+     */ 
     isAnimating(){
         return vec3.dist(this.location, camera.pos)<=this.distanceToAnimate;
     }
-
+    /**
+     * Binds necessary buffers for a mesh and creates its vertex array object.
+     * @function
+     * @param {object} mesh - The mesh object for which to bind buffers.
+     * @returns {WebGLVertexArrayObject} - The vertex array object. 
+     */
     bindMeshBuffers(mesh){    
         const vao=gl.createVertexArray();
         gl.bindVertexArray(vao);
@@ -178,7 +223,13 @@ class Model{
         return vao;
     }
 }
-
+/**
+ * Interpolates between keyframes to calculate the rotation, scaling, and translation of a bone in an animation.
+ * @function
+ * @param {Array} keyframes - The array of keyframes.
+ * @param {number} time - The current time in milliseconds.
+ * @returns {vec3 | quat} - The interpolated rotation, scaling, and translation values. 
+ */
 function interpolateKeys(keyframes, time){
     var pre = null;
     var next = null;
@@ -199,6 +250,5 @@ function interpolateKeys(keyframes, time){
         return quat.slerp([], pre[1], next[1], t);
     }
 }
-
 
 export {Model};
