@@ -1,4 +1,4 @@
-import{vec3, toRadian} from "./utils.js";
+import{vec3, toRadian, updateCameraSpecInHTML} from "./utils.js";
 
 /**
  * The camera object that stores its position, direction, and up vectors.
@@ -28,6 +28,7 @@ document.addEventListener('keyup', (event) => {pressedKeySet.delete(event.code);
  * @param {Camera} camera - The camera object.
  */
 function handleKey(camera) {
+    updateCameraSpecInHTML();
     var movePace=0.04;
     var rotatePace=1;
     if(pressedKeySet.has("ShiftLeft")||pressedKeySet.has("ShiftRight")){

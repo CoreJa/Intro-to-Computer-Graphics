@@ -17,13 +17,15 @@ text.forEach(t => {
     })
 });
 
-var coords=Array.from(document.getElementsByClassName("coord"));
-coords[0].innerHTML=camera.pos[0].toFixed(2);
-coords[1].innerHTML=camera.pos[1].toFixed(2);
-coords[2].innerHTML=camera.pos[2].toFixed(2);
-coords[3].innerHTML=camera.direction[0].toFixed(2);
-coords[4].innerHTML=camera.direction[1].toFixed(2);
-coords[5].innerHTML=camera.direction[2].toFixed(2);
+function updateCameraSpecInHTML(){
+    var coords=Array.from(document.getElementsByClassName("coord"));
+    coords[0].innerHTML=camera.pos[0].toFixed(2);
+    coords[1].innerHTML=camera.pos[1].toFixed(2);
+    coords[2].innerHTML=camera.pos[2].toFixed(2);
+    coords[3].innerHTML=camera.direction[0].toFixed(2);
+    coords[4].innerHTML=camera.direction[1].toFixed(2);
+    coords[5].innerHTML=camera.direction[2].toFixed(2);
+}
 
 /** Options */
 document.getElementById("animate-switch").addEventListener("change",()=>{
@@ -40,4 +42,4 @@ document.getElementById("animate-switch").addEventListener("change",()=>{
 });
 
 
-export {mat4, vec3, vec2, vec4, quat, toRadian};
+export {mat4, vec3, vec2, vec4, quat, toRadian, updateCameraSpecInHTML};
